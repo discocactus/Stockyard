@@ -7,8 +7,10 @@ import pandas.tseries.offsets as offsets
 import datetime as dt
 import time
 import importlib
-import traceback
-from retrying import retry
+import logging
+from retry import retry
+# import traceback
+# from retrying import retry
 from sqlalchemy import create_engine
 from sqlalchemy.types import Date
 from sqlalchemy.types import Integer
@@ -93,7 +95,8 @@ class sql:
 # 関数にretryデコレーターを付ける
 # stop_max_attempt_numberは最大リトライ関数を指定する
 # wait_exponential_multiplierは指数関数的なウェイトを取る場合の初回のウェイトをミリ秒単位で指定する
-@retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+# @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+@retry(tries=5, delay=1, backoff=2)
 def get_quote_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
     # http://jbclub.xii.jp/?p=598
