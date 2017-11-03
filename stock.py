@@ -93,10 +93,13 @@ class sql:
     
     
 # 関数にretryデコレーターを付ける
-# stop_max_attempt_numberは最大リトライ関数を指定する
-# wait_exponential_multiplierは指数関数的なウェイトを取る場合の初回のウェイトをミリ秒単位で指定する
-# @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
 @retry(tries=5, delay=1, backoff=2)
+def get_table(url):
+    result = pd.read_html(url, header=0) # header引数で0行目をヘッダーに指定。データフレーム型
+    
+    return result
+
+
 def get_quote_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
     # http://jbclub.xii.jp/?p=598
@@ -120,7 +123,7 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
         url = base.format(code, start, end, interval, p)
         # print(url)
         # https://info.finance.yahoo.co.jp/history/?code=7203.T&sy=2000&sm=1&sd=1&ey=2017&em=10&ed=13&tm=d&p=1
-        tables = pd.read_html(url, header=0) # header引数で0行目をヘッダーに指定。データフレーム型
+        tables = get_table(url)
         if len(tables) < 2 or len(tables[1]) == 0:
             # print('break')
             break
