@@ -92,6 +92,16 @@ class sql:
         return result
     
     
+    def write_table(self, table_name, table):
+        table.to_sql(table_name, sql.engine, if_exists='replace')
+        
+    
+    def read_table(self, table_name):
+        result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        
+        return result
+    
+    
 # 関数にretryデコレーターを付ける
 @retry(tries=5, delay=1, backoff=2)
 def get_table(url):
