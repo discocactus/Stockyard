@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 import pandas.tseries.offsets as offsets
+import matplotlib.pyplot as plt
 import datetime as dt
 import time
 import importlib
@@ -30,7 +31,7 @@ df_quote.index
 
 #%%
 # 出来高ゼロの日はインデックスごと欠落しているので、ビジネスデイ(freq='B')のdatetime型インデックスにデータをあてはめる
-# TODO 休日はどうするか要検討
+# TODO 休日はどうするか要検討、japandas使ってみる
 df_quote_fill = pd.DataFrame(df_quote, index=pd.date_range(df_quote.index[0], df_quote.index[-1], freq='B'))
 
 # 欠損データを補完する
@@ -51,6 +52,27 @@ df_quote_fill[['Open', 'High', 'Low']] = df_quote_fill[['Open', 'High', 'Low']].
 df_quote_fill.isnull().any() # 欠損値の有無を列単位で確認
 df_quote_fill
 
+#%%
+# 収益率系列の作成
+# 原系列階差
+df_quote_fill['diff'] = df_quote_fill['AdjClose'].diff(1)
+# 収益率
+df_quote_fill['return'] = df_quote_fill['diff'] / df_quote_fill['AdjClose'].shift(1) * 100
+# 対数系列
+df_quote_fill['log'] = np.log(df_quote_fill['AdjClose'])
+# 対数差収益率
+df_quote_fill['log_return'] = df_quote_fill['log'].diff(1) * 100
+
+#%%
+# plot
+# %matplotlib inline
+plt.style.use('ggplot')
+
+# Line
+df_quote_fill['AdjClose'].plot()
+df_quote_fill['return'].plot()
+df_quote_fill['log_return'].plot()
+df_quote_fill[['return', 'log_return']].plot()
 #%%
 # datetime型インデックスの作成例
 dtidx = pd.date_range('2000-01-01', '2017-12-01', freq='B') # freq='B'はBusiness Day
