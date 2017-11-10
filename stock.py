@@ -12,9 +12,9 @@ from retry import retry
 # import traceback
 # from retrying import retry
 from sqlalchemy import create_engine
-from sqlalchemy.types import Date
-from sqlalchemy.types import Integer
-from sqlalchemy.types import Text
+from sqlalchemy.types import Date, Integer, Float, Text
+# from sqlalchemy.types import Integer
+# from sqlalchemy.types import Text
 
 
 class sql:
@@ -38,7 +38,7 @@ class sql:
             'Low': Integer(),
             'Close': Integer(),
             'Volume': Integer(),
-            'AdjClose': Integer()
+            'AdjClose': Float()
         }
         quote.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
         # 主キーを設定
@@ -72,13 +72,13 @@ class sql:
         return result
         
 
-    def get_domestic_stock_code(self, start_index=0, end_index=None):
-        domestic_stock_table = pd.read_sql_table('domestic_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+    def get_yahoo_stock_code(self, start_index=0, end_index=None):
+        yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', sql.engine, index_col=None).drop('index', axis=1)
         
         if end_index == None:
-            end_index = len(domestic_stock_table)
+            end_index = len(yahoo_stock_table)
 
-        result = list(domestic_stock_table['code'][start_index : end_index])
+        result = list(yahoo_stock_table['code'][start_index : end_index])
         
         return result
 
