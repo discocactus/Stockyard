@@ -29,6 +29,15 @@ df_quote
 df_quote.dtypes
 df_quote.index
 
+df_quote1 = pd.read_csv('/Users/Really/Stockyard/_csv/t_9983.csv', index_col='Date')
+df_quote1.index = pd.to_datetime(df_quote1.index)
+df_quote1
+
+df_quote1.dtypes
+df_quote1.index
+
+df_9983 = stock.complement_price(df_quote1)
+
 #%%
 # 出来高ゼロの日はインデックスごと欠落しているので、ビジネスデイ(freq='B')のdatetime型インデックスにデータをあてはめる
 # TODO 休日はどうするか要検討、japandas使ってみる
@@ -43,25 +52,51 @@ df_quote_fill[['Close', 'AdjClose']] = df_quote_fill[['Close', 'AdjClose']].fill
 
 # 欠損Openを前日補完済み前日Closeで補完 (下の2つはやり方の違い、結果は同じ)
 df_quote_fill['Open'] = df_quote_fill['Open'].fillna(df_quote_fill['Close'].shift(1))
-df_quote_fill['Open'][1:] = df_quote_fill['Open'][1:].where(~df_quote_fill['Open'][1:].isnull(),
-                  np.array(df_quote_fill['Close'][:-1]))
+# df_quote_fill['Open'][1:] = df_quote_fill['Open'][1:].where(~df_quote_fill['Open'][1:].isnull(),
+#                   np.array(df_quote_fill['Close'][:-1]))
 
 # High,Low,CloseはOpenで補完
 df_quote_fill[['Open', 'High', 'Low']] = df_quote_fill[['Open', 'High', 'Low']].fillna(method='ffill', axis=1)
 
-df_quote_fill.isnull().any() # 欠損値の有無を列単位で確認
 df_quote_fill
+df_quote_fill.isnull().any() # 欠損値の有無を列単位で確認
 
 #%%
-# 収益率系列の作成
-# 原系列階差
-df_quote_fill['diff'] = df_quote_fill['AdjClose'].diff(1)
-# 収益率
-df_quote_fill['return'] = df_quote_fill['diff'] / df_quote_fill['AdjClose'].shift(1) * 100
+# 関数化
+df_quote_fill = stock.complement_price(df_quote)
+
+#%%
+# 差分系列の作成
+
+# 原系列
+# 当日Close-前日Close
+df_quote_fill['diff_close'] = df_quote_fill['AdjClose'].diff(1)
+# Close-Open
+df_quote_fill['open_close'] = df_quote_fill['Close'] - df_quote_fill['Open']
+# High-Low
+df_quote_fill['range'] = df_quote_fill['High'] - df_quote_fill['Low']
+# 収益率 当日Close-前日Close
+df_quote_fill['return_dc'] = df_quote_fill['diff_close'] / df_quote_fill['AdjClose'].shift(1) * 100
+# 収益率 Close-Open
+df_quote_fill['return_oc'] = df_quote_fill['open_close'] / df_quote_fill['Open'] * 100
+# 比率 range/Open
+df_quote_fill['ratio_range'] = df_quote_fill['range'] / df_quote_fill['Open'] * 100
+
 # 対数系列
-df_quote_fill['log'] = np.log(df_quote_fill['AdjClose'])
-# 対数差収益率
-df_quote_fill['log_return'] = df_quote_fill['log'].diff(1) * 100
+# 対数化 AdjClose
+df_quote_fill['log_price'] = np.log(df_quote_fill['AdjClose'])
+# 対数差収益率 当日Close-前日Close
+df_quote_fill['log_return_dc'] = df_quote_fill['log_price'].diff(1) * 100
+# 対数差収益率 Close-Open
+df_quote_fill['log_return_oc'] = (np.log(df_quote_fill['Close']) - np.log(df_quote_fill['Open'])) * 100
+# 対数化 High-Low
+# df_quote_fill['log_range'] = np.log(df_quote_fill['High']) - np.log(df_quote_fill['Low'])
+# 対数化比率 range / Open
+# df_quote_fill['log_ratio_range'] = (np.log(df_quote_fill['High']) - np.log(df_quote_fill['Low'])) / np.log(df_quote_fill['Open']) * 100
+
+#%%
+# 関数化
+df_quote_fill = stock.add_processed_price(df_quote_fill)
 
 #%%
 # plot
@@ -70,9 +105,19 @@ plt.style.use('ggplot')
 
 # Line
 df_quote_fill['AdjClose'].plot()
-df_quote_fill['return'].plot()
-df_quote_fill['log_return'].plot()
-df_quote_fill[['return', 'log_return']].plot()
+df_quote_fill[['return_dc', 'return_oc']].plot()
+df_quote_fill['range'].plot()
+df_quote_fill['ratio_range'].plot()
+df_quote_fill['log_return_oc'].plot()
+df_quote_fill[['return_oc', 'log_return_oc']].plot()
+
+#%%
+# 最大値とか
+df_9983['Volume'].max()
+df_9983['Volume'].idxmax()
+df_9983['Volume'].ix[df_9983['Volume'].idxmax()]
+np.where(df_9983['Volume'] == df_9983['Volume'].max())
+
 #%%
 # datetime型インデックスの作成例
 dtidx = pd.date_range('2000-01-01', '2017-12-01', freq='B') # freq='B'はBusiness Day
