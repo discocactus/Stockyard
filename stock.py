@@ -1,5 +1,5 @@
-
 # coding: utf-8
+
 from __future__ import unicode_literals
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ class sql:
     engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
 
     
-    def write_quote(self, code, quote):
+    def write_price(self, code, price):
         table_name = 't_{0}'.format(code)
         # sqlalchemy.typesで定義されたデータ型を辞書形式で設定
         dtype = {
@@ -40,14 +40,14 @@ class sql:
             'Volume': Integer(),
             'AdjClose': Float()
         }
-        quote.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
+        price.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
         # 主キーを設定
         # 参考 https://stackoverflow.com/questions/30867390/python-pandas-to-sql-how-to-create-a-table-with-a-primary-key
         with sql.engine.connect() as con:
             con.execute('ALTER TABLE `{0}` ADD PRIMARY KEY (`Date`);'.format(table_name))
         
 
-    def get_quote(self, code):
+    def get_price(self, code):
         table_name = 't_{0}'.format(code)
         result = pd.read_sql_table(table_name, sql.engine, index_col='Date')#.drop('index', axis=1)
         
@@ -110,7 +110,7 @@ def get_table(url):
     return result
 
 
-def get_quote_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
+def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
     # http://jbclub.xii.jp/?p=598
     base = 'http://info.finance.yahoo.co.jp/history/?code={0}.T&{1}&{2}&tm={3}&p={4}'
@@ -157,9 +157,9 @@ def get_quote_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
     return [result, stock_name]
 
 
-def extract_quote(tmp_quote):
+def extract_price(tmp_price):
     # null が存在する行を取り除いて価格データとする 参考 https://qiita.com/u1and0/items/fd2780813b690a40c197
-    result = tmp_quote[~tmp_quote.isnull().any(axis=1)].astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
+    result = tmp_price[~tmp_price.isnull().any(axis=1)].astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
     # なぜか日付が重複した行が入る場合があるので確認、削除
     if(result.index.duplicated().any()):
         result = result[~result.index.duplicated()]
