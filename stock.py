@@ -65,8 +65,8 @@ class sql:
         info.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
         
         
-    def get_info(self):
-        result = pd.read_sql_table('info', sql.engine, index_col=None).drop('index', axis=1)
+    def get_info(self, table_name):
+        result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
         result['Date'] = pd.to_datetime(result['Date'])
         
         return result
