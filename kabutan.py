@@ -24,8 +24,6 @@
 # 新規上場銘柄には存在しないテーブルがある (例) 3995 SKIYAKI 過去最高と３ヵ月業績の推移が無い、業績予想の修正履歴は空)
 # → 数銘柄だけのはずなので、例外としてパスして後でマニュアル処理する?
 
-# 通期業績テーブルの予想値の行は業績予想修正履歴テーブルに連結すべきか?
-
 # 2000年以前の財務実績の発表日は全体的に信用できない
 # 1998年は何らかの日付で固定 or 捨て、1999年と2000年は通期業績の発表日と同じにする
 # # import など準備
@@ -535,7 +533,191 @@ for table_number in range(len(tables5)):
     display(tables5[table_number])
 
 
+# __各銘柄の通期業績と財務のテーブル長の確認__  
+# __ついでに日付が合致するかどうかも見てもいいかも__
+
+# In[ ]:
+
+# ループ、未完成
+
+
+# In[ ]:
+
+table_qty = []
+
+for index in range(len(code_list)):
+    try:
+        tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code_list[index]), header=0)
+        table_qty.append(len(tables))
+    except Exception as e:
+        print(code_list[index])
+        print(e)
+
+
+# In[ ]:
+
+# 読み込み
+
+
+# In[ ]:
+
+code = 7203
+
+
+# In[ ]:
+
+# 保存した html からテーブル属性を読み込み
+tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
+
+
+# In[ ]:
+
+# 列数が 5 以下のテーブルを削除
+tables = list(filter(lambda x: len(x.columns) > 5, tables))
+
+
+# In[ ]:
+
+# tables[3] 通期業績の整形処理
+
+
+# In[ ]:
+
+# 全ての列項目がnullの行を除去
+tables[3] = tables[3][~tables[3].isnull().all(axis=1)].reset_index(drop=True)
+
+
+# In[ ]:
+
+# 予想値と前期比の行を除去
+tables[3] = tables[3][~((tables[3]['決算期'].str.contains('予')) | (tables[3]['決算期'].str.contains('前期比')))].reset_index(drop=True)
+
+
+# In[ ]:
+
+# 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
+tables[3][['会計基準', '決算期']] = pd.DataFrame(list(tables[3]['決算期'].str.split(' ')))
+
+
+# In[ ]:
+
+# 列の並び替え
+tables[3] = tables[3][['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
+
+
+# In[ ]:
+
+# 100万円単位換算
+tables[3][['売上高', '営業益', '経常益', '最終益']] = tables[3][['売上高', '営業益', '経常益', '最終益']].apply(lambda x: x * 1000000)
+
+
+# In[ ]:
+
+# 型変換
+tables[3]['１株配'] = tables[3]['１株配'].astype(float)
+
+
+# In[ ]:
+
+# 日付のパース、datetime.dateへの型変換
+# tables[3]['決算期'] = tables[3]['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
+tables[3]['発表日'] = tables[3]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+# pandasのTimestampへの型変換
+tables[3]['発表日'] = pd.to_datetime(tables[3]['発表日'], format='%Y-%m-%d')
+# tables[3]['決算期'] = pd.to_datetime(tables[3]['決算期'], format='%Y-%m-%d')
+
+
+# In[ ]:
+
+# tables[9] 財務 【実績】の整形処理
+
+
+# In[ ]:
+
+# 全ての列項目がnullの行を除去
+tables[9] = tables[9][~tables[9].isnull().all(axis=1)].reset_index(drop=True)
+
+
+# In[ ]:
+
+# 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
+tables[9][['会計基準', '決算期']] = pd.DataFrame(list(tables[9]['決算期'].str.split(' ')))
+
+
+# In[ ]:
+
+# 列の並び替え
+tables[9] = tables[9][['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
+
+
+# In[ ]:
+
+# 決算期が 'yyyy.mm' 表記ではない行は確定決算前と判断して削除
+tables[9] = tables[9][tables[9]['決算期'].str.contains('\d\d\d\d.\d\d')]
+
+
+# In[ ]:
+
+# 決算期が 1998.03 のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
+tables[9] = tables[9][~tables[9]['決算期'].str.contains('1998.03')].reset_index(drop=True)
+
+
+# In[ ]:
+
+# '－'  を NaN に置換
+# .str を2回も使わないといけないのはなんだか。。。
+tables[9].loc[~tables[9]['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
+tables[9].loc[~tables[9]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
+
+
+# In[ ]:
+
+# 型変換
+tables[9][['１株純資産', '有利子負債倍率']] = tables[9][['１株純資産', '有利子負債倍率']].astype(float)
+
+
+# In[ ]:
+
+# 100万円単位換算
+tables[9][['総資産', '自己資本', '剰余金']] = tables[9][['総資産', '自己資本', '剰余金']].apply(lambda x: x * 1000000)
+
+
+# In[ ]:
+
+# 日付のパース、datetime.dateへの型変換
+# tables[9]['決算期'] = tables[9]['決算期'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date()) # 日付ではないので文字列のままの方がいいかも？
+tables[9]['発表日'] = tables[9]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+# pandasのTimestampへの型変換
+# tables[9]['決算期'] = pd.to_datetime(tables[9]['決算期'], format='%Y-%m-%d')
+tables[9]['発表日'] = pd.to_datetime(tables[9]['発表日'], format='%Y-%m-%d')
+
+
+# In[ ]:
+
+# 比較、未完成
+
+
+# In[ ]:
+
+for count in range(len(tables[3])):
+    try:
+        if len(tables[3]) == len(tables[9]):
+            if (tables[3].ix[count, '会計基準'] == tables[9].ix[count, '会計基準'] and tables[3].ix[count, '決算期'] == tables[9].ix[count, '決算期']):
+                print('True {0}'.format(tables[3].ix[count, '発表日']))
+                tables[9].ix[count, '発表日'] = tables[3].ix[count, '発表日']
+        else:
+            print('{0}: Not match table length.'.format(code))
+    except Exception as e:
+        print(code)
+        print(e)
+
+
 # # 保存した html ファイルからテーブル属性のみ読み込み、整形
+
+# In[ ]:
+
+code = 7203
+
 
 # In[ ]:
 
@@ -601,7 +783,6 @@ tables[3] = tables[3][~tables[3].isnull().all(axis=1)].reset_index(drop=True)
 
 # In[ ]:
 
-# 通期業績テーブルの予想値の行は業績予想修正履歴テーブルに連結?
 # 予想値と前期比の行を除去
 tables[3] = tables[3][~((tables[3]['決算期'].str.contains('予')) | (tables[3]['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
@@ -1018,39 +1199,6 @@ tables[9] = tables[9][~tables[9]['決算期'].str.contains('1998.03')].reset_ind
 
 # In[ ]:
 
-tables[3]
-
-
-# In[ ]:
-
-len(tables[9]) == len(tables[3])
-
-
-# In[ ]:
-
-pd.Series(tables[9]['決算期']) == pd.Series(tables[3]['決算期'])
-
-
-# In[ ]:
-
-pd.Series(tables[9]['発表日']) == pd.Series(tables[3]['発表日'])
-
-
-# In[ ]:
-
-count = 0
-
-
-# In[ ]:
-
-if (tables[9].ix[count, '決算期'] == tables[3].ix[count, '決算期'] and tables[9].ix[count, '発表日'] == tables[3].ix[count, '発表日']):
-    print('ok')
-else:
-    print('ng')
-
-
-# In[ ]:
-
 # '－'  を NaN に置換
 # .str を2回も使わないといけないのはなんだか。。。
 tables[9].loc[~tables[9]['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
@@ -1077,6 +1225,31 @@ tables[9]['発表日'] = tables[9]['発表日'].apply(lambda x: parse(x, yearfir
 # pandasのTimestampへの型変換
 # tables[9]['決算期'] = pd.to_datetime(tables[9]['決算期'], format='%Y-%m-%d')
 tables[9]['発表日'] = pd.to_datetime(tables[9]['発表日'], format='%Y-%m-%d')
+
+
+# In[ ]:
+
+tables[3]
+
+
+# In[ ]:
+
+tables[9]
+
+
+# In[ ]:
+
+for count in range(len(tables[3])):
+    try:
+        if len(tables[3]) == len(tables[9]):
+            if (tables[3].ix[count, '会計基準'] == tables[9].ix[count, '会計基準'] and tables[3].ix[count, '決算期'] == tables[9].ix[count, '決算期']):
+                print('True {0}'.format(tables[3].ix[count, '発表日']))
+                tables[9].ix[count, '発表日'] = tables[3].ix[count, '発表日']
+        else:
+            print('{0}: Not match table length.'.format(code))
+    except Exception as e:
+        print(code)
+        print(e)
 
 
 # In[ ]:
