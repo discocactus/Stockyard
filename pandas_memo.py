@@ -1143,7 +1143,49 @@ tables[27].loc[~tables[27]['１株純資産'].str.replace('.', '').str.isnumeric
 tables[27].loc[~tables[27]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
 
 
+# ## 複数のデータフレームで構成されるリストから列数が任意の数以下のデータフレームを削除
+
+# In[ ]:
+
+# 列数が 5 以下のテーブルを削除
+tables = list(filter(lambda x: len(x.columns) > 5, tables))
+
+
+# ## csv
+
+# In[ ]:
+
+# 保存
+kabupro_kessan.to_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv')
+
+
+# In[ ]:
+
+# 保存したファイルの確認
+csv_kessan = pd.read_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv', index_col=0)
+
+
+# In[ ]:
+
+# 'Date'列をインデックスに指定してCSVの読み込み、インデックスをdatetime型に変換
+df_quote = pd.read_csv('/Users/Really/Stockyard/_csv/t_1758.csv', index_col='Date')
+df_quote.index = pd.to_datetime(df_quote.index)
+df_quote
+
+
+# In[ ]:
+
+# kabutan
+pl_csv = pd.read_csv('pl_table.csv', index_col = 0, dtype={'決算期': object}, parse_dates=['発表日'])
+
+
 # ## その他
+
+# In[ ]:
+
+# .astype()の引数は辞書で指定できる。
+df.astype({'a': int, 'c': str})
+
 
 # In[ ]:
 
@@ -1178,14 +1220,6 @@ all_stock_table = all_stock_table.rename(columns={'市場・商品区分': 'mark
 
 # marketの値を指定して選択
 len(all_stock_table.query("market == '市場第一部（内国株）' | market == '市場第二部（内国株）'"))
-
-
-# In[ ]:
-
-# 'Date'列をインデックスに指定してCSVの読み込み、インデックスをdatetime型に変換
-df_quote = pd.read_csv('/Users/Really/Stockyard/_csv/t_1758.csv', index_col='Date')
-df_quote.index = pd.to_datetime(df_quote.index)
-df_quote
 
 
 # In[ ]:

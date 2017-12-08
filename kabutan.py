@@ -25,7 +25,49 @@
 # → 数銘柄だけのはずなので、例外としてパスして後でマニュアル処理する?
 
 # 2000年以前の財務実績の発表日は全体的に信用できない
-# 1998年は何らかの日付で固定 or 捨て、1999年と2000年は通期業績の発表日と同じにする
+# 1998年は何らかの日付で固定 or 捨て、1999年と2000年は通期業績の発表日と同じにする# ahaha infomation
+
+# 【 株探：HTMLから解析する際の注意点 】
+
+# １．業績予想は、修正されていない場合は通期実績欄にしか情報が無い。
+# ２．3ヶ月単位業績に、銘柄によって予想があったり無かったりする。
+
+# －－－－
+
+# 【株探：CSV利用時の注意点】
+
+# １．業績予測以外は、業績実績を修正しても、「発表日」は反映されない。　 
+# → トレードシステム作る時は、先に取得したデータを優先させる必要あり。
+
+# ２．「適時開示」したタイミングで、公表データ以外の過去実績データも更新される事がある。
+# → トレードシステム作る時は、先に取得したデータを優先させる必要あり。
+
+# ３．「通期業績」で同じ「発表日」に、複数の決算期の発表をしていることがある。「財務 実績」は重複なし。
+
+# 「通期業績」：１５銘柄
+# ['8215', '2374', '8439', '6727', '4924', '2763', '2349', '2754', '2300', '4321', '4337', '4316', '7847', '8628', '2721']
+
+# ４．発表日がNaTの場合がけっこうある。
+
+# 特に2000年3月期データの発表日が無いデータが多い（1216銘柄）。　
+# 「通期業績」と「財務 実績」それぞれの発表日でそれらしい方を選んで穴埋めした方がよさそう。
+
+# ６．発表日1990-08-01のデータはおかしい
+# 実際は、1998-10-20からというのが正しい。
+# 「2910」など８銘柄。　BS側のデータが間違えている。　PL側は正しい。　決算期は「1999.04」
+# 2910,3103,4203,5103,6103,6203,7203,8143
+
+# －－－－
+
+# ■ メモリ使用量
+
+# あと、メモリ使用量について調べてみた。
+
+# 今後の計算のために、
+# 横軸に「財務項目×全銘柄コード」という２段構成、
+# 縦軸には、日付（1998/10/20以降の全営業日）という贅沢テーブルを作ってみたら、
+# 計算過程で、最大＋７．５ＧＢに膨らんで、最終的には３ＧＢぐらいに戻った。　
+# ただ、価格データもメモリに載せると、あわせて１０ＧＢぐらいに一旦膨らんで、５．５ＧＢぐらいに戻る感じ。
 # # import など準備
 
 # ## import, MySQL 接続
@@ -307,10 +349,10 @@ len(code_list)
 
 # In[ ]:
 
-start_index = 30
+start_index = 0
 increase_number = 10
-# end_index = start_index + increase_number
-end_index = len(code_list)
+end_index = start_index + increase_number
+# end_index = len(code_list)
 
 reading_code = code_list[start_index : end_index]
 print(reading_code[-10:])
@@ -376,7 +418,7 @@ logging.info('{0} get_html Finished'.format(dt.datetime.now().strftime('%Y-%m-%d
 
 # In[ ]:
 
-code = 7203
+code = 1301
 
 
 # In[ ]:
@@ -543,15 +585,108 @@ for table_number in range(len(tables5)):
 
 # In[ ]:
 
-table_qty = []
+error_table = pd.DataFrame(columns=('code', 'error'))
 
-for index in range(len(code_list)):
+
+# In[ ]:
+
+# error = pd.Series(['0000', 'error'], index=error_table.columns)
+error_table = error_table.append(pd.Series(['0000', 'error'], index=error_table.columns), ignore_index = True)
+
+
+# In[ ]:
+
+error
+
+
+# In[ ]:
+
+error_table
+
+
+# In[ ]:
+
+error_table = pd.DataFrame(columns=('code', 'error'))
+
+for index in range(len(reading_code)):
     try:
-        tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code_list[index]), header=0)
-        table_qty.append(len(tables))
+        # 保存した html からテーブル属性を読み込み
+        tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(reading_code[index]), header=0)
+        # 列数が 5 以下のテーブルを削除
+        tables = list(filter(lambda x: len(x.columns) > 5, tables))
+
+        # tables[3] 通期業績の整形処理
+        # 全ての列項目がnullの行を除去
+        tables[3] = tables[3][~tables[3].isnull().all(axis=1)].reset_index(drop=True)
+        # 予想値と前期比の行を除去
+        tables[3] = tables[3][~((tables[3]['決算期'].str.contains('予')) | (tables[3]['決算期'].str.contains('前期比')))].reset_index(drop=True)
+        # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
+        if not tables[3]['決算期'].str.contains(' ').all():
+            tables[3]['会計基準'] = list('J' * len(tables[3]))
+        else:
+            tables[3][['会計基準', '決算期']] = pd.DataFrame(list(tables[3]['決算期'].str.split(' ')))
+        # 列の並び替え
+        tables[3] = tables[3][['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
+        # 100万円単位換算
+        tables[3][['売上高', '営業益', '経常益', '最終益']] = tables[3][['売上高', '営業益', '経常益', '最終益']].apply(lambda x: x * 1000000)
+        # 型変換
+        tables[3]['１株配'] = tables[3]['１株配'].astype(float)
+        # 日付のパース、datetime.dateへの型変換
+        # tables[3]['決算期'] = tables[3]['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
+        tables[3]['発表日'] = tables[3]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+        # pandasのTimestampへの型変換
+        tables[3]['発表日'] = pd.to_datetime(tables[3]['発表日'], format='%Y-%m-%d')
+        # tables[3]['決算期'] = pd.to_datetime(tables[3]['決算期'], format='%Y-%m-%d')
+
+        # tables[9] 財務 【実績】の整形処理
+        # 全ての列項目がnullの行を除去
+        tables[9] = tables[9][~tables[9].isnull().all(axis=1)].reset_index(drop=True)
+        # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
+        if not tables[9]['決算期'].str.contains(' ').all():
+            tables[9]['会計基準'] = list('J' * len(tables[9]))
+        else:
+            tables[9][['会計基準', '決算期']] = pd.DataFrame(list(tables[9]['決算期'].str.split(' ')))
+        # 列の並び替え
+        tables[9] = tables[9][['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
+        # 決算期が 'yyyy.mm' 表記ではない行は確定決算前と判断して削除
+        tables[9] = tables[9][tables[9]['決算期'].str.contains('\d\d\d\d.\d\d')]
+        # 決算期が 1998.03 のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
+        tables[9] = tables[9][~tables[9]['決算期'].str.contains('1998.03')].reset_index(drop=True)
+        # '－'  を NaN に置換
+        # .str を2回も使わないといけないのはなんだか。。。
+        tables[9].loc[~tables[9]['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
+        tables[9].loc[~tables[9]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
+        # 型変換
+        tables[9][['１株純資産', '有利子負債倍率']] = tables[9][['１株純資産', '有利子負債倍率']].astype(float)
+        # 100万円単位換算
+        tables[9][['総資産', '自己資本', '剰余金']] = tables[9][['総資産', '自己資本', '剰余金']].apply(lambda x: x * 1000000)
+        # 日付のパース、datetime.dateへの型変換
+        # tables[9]['決算期'] = tables[9]['決算期'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date()) # 日付ではないので文字列のままの方がいいかも？
+        tables[9]['発表日'] = tables[9]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+        # pandasのTimestampへの型変換
+        # tables[9]['決算期'] = pd.to_datetime(tables[9]['決算期'], format='%Y-%m-%d')
+        tables[9]['発表日'] = pd.to_datetime(tables[9]['発表日'], format='%Y-%m-%d')
+
+        
+        try:
+            if len(tables[3]) == len(tables[9]):
+                if ((tables[3][['会計基準', '決算期']] != tables[9][['会計基準', '決算期']]).any()).any():
+                    print('{0}: Not match 会計基準 or 決算期'.format(reading_code[index]))
+                    error_table = error_table.append(pd.Series([reading_code[index], 'Not match 会計基準 or 決算期'], index=error_table.columns), ignore_index = True)
+                    # print('True {0} {1}'.format(tables[3].ix[count, '発表日']))
+                    # tables[9].ix[count, '発表日'] = tables[3].ix[count, '発表日']
+            else:
+                print('{0}: Not match table length.'.format(reading_code[index]))
+                error_table = error_table.append(pd.Series([reading_code[index], 'Not match table length.'], index=error_table.columns), ignore_index = True)
+        except Exception as e:
+            print('{0}: Failed in checking.'.format(reading_code[index]))
+            print(e)
+            error_table = error_table.append(pd.Series([reading_code[index], 'Not match table length.'], index=error_table.columns), ignore_index = True)
     except Exception as e:
-        print(code_list[index])
+        # print(reading_code[index])
+        print('{0}: Failed in shaping.'.format(reading_code[index]))
         print(e)
+        error_table = error_table.append(pd.Series([reading_code[index], 'Failed in shaping.'], index=error_table.columns), ignore_index = True)
 
 
 # In[ ]:
@@ -561,16 +696,13 @@ for index in range(len(code_list)):
 
 # In[ ]:
 
-code = 7203
+code = 1376
 
 
 # In[ ]:
 
 # 保存した html からテーブル属性を読み込み
 tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
-
-
-# In[ ]:
 
 # 列数が 5 以下のテーブルを削除
 tables = list(filter(lambda x: len(x.columns) > 5, tables))
@@ -580,44 +712,23 @@ tables = list(filter(lambda x: len(x.columns) > 5, tables))
 
 # tables[3] 通期業績の整形処理
 
-
-# In[ ]:
-
 # 全ての列項目がnullの行を除去
 tables[3] = tables[3][~tables[3].isnull().all(axis=1)].reset_index(drop=True)
-
-
-# In[ ]:
 
 # 予想値と前期比の行を除去
 tables[3] = tables[3][~((tables[3]['決算期'].str.contains('予')) | (tables[3]['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
-
-# In[ ]:
-
 # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
 tables[3][['会計基準', '決算期']] = pd.DataFrame(list(tables[3]['決算期'].str.split(' ')))
-
-
-# In[ ]:
 
 # 列の並び替え
 tables[3] = tables[3][['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
 
-
-# In[ ]:
-
 # 100万円単位換算
 tables[3][['売上高', '営業益', '経常益', '最終益']] = tables[3][['売上高', '営業益', '経常益', '最終益']].apply(lambda x: x * 1000000)
 
-
-# In[ ]:
-
 # 型変換
 tables[3]['１株配'] = tables[3]['１株配'].astype(float)
-
-
-# In[ ]:
 
 # 日付のパース、datetime.dateへの型変換
 # tables[3]['決算期'] = tables[3]['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
@@ -631,58 +742,31 @@ tables[3]['発表日'] = pd.to_datetime(tables[3]['発表日'], format='%Y-%m-%d
 
 # tables[9] 財務 【実績】の整形処理
 
-
-# In[ ]:
-
 # 全ての列項目がnullの行を除去
 tables[9] = tables[9][~tables[9].isnull().all(axis=1)].reset_index(drop=True)
-
-
-# In[ ]:
 
 # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
 tables[9][['会計基準', '決算期']] = pd.DataFrame(list(tables[9]['決算期'].str.split(' ')))
 
-
-# In[ ]:
-
 # 列の並び替え
 tables[9] = tables[9][['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
-
-
-# In[ ]:
 
 # 決算期が 'yyyy.mm' 表記ではない行は確定決算前と判断して削除
 tables[9] = tables[9][tables[9]['決算期'].str.contains('\d\d\d\d.\d\d')]
 
-
-# In[ ]:
-
 # 決算期が 1998.03 のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
 tables[9] = tables[9][~tables[9]['決算期'].str.contains('1998.03')].reset_index(drop=True)
-
-
-# In[ ]:
 
 # '－'  を NaN に置換
 # .str を2回も使わないといけないのはなんだか。。。
 tables[9].loc[~tables[9]['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
 tables[9].loc[~tables[9]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
 
-
-# In[ ]:
-
 # 型変換
 tables[9][['１株純資産', '有利子負債倍率']] = tables[9][['１株純資産', '有利子負債倍率']].astype(float)
 
-
-# In[ ]:
-
 # 100万円単位換算
 tables[9][['総資産', '自己資本', '剰余金']] = tables[9][['総資産', '自己資本', '剰余金']].apply(lambda x: x * 1000000)
-
-
-# In[ ]:
 
 # 日付のパース、datetime.dateへの型変換
 # tables[9]['決算期'] = tables[9]['決算期'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date()) # 日付ではないので文字列のままの方がいいかも？
@@ -703,7 +787,7 @@ for count in range(len(tables[3])):
     try:
         if len(tables[3]) == len(tables[9]):
             if (tables[3].ix[count, '会計基準'] == tables[9].ix[count, '会計基準'] and tables[3].ix[count, '決算期'] == tables[9].ix[count, '決算期']):
-                print('True {0}'.format(tables[3].ix[count, '発表日']))
+                print('True {0} {1}'.format(tables[3].ix[count, '発表日']))
                 tables[9].ix[count, '発表日'] = tables[3].ix[count, '発表日']
         else:
             print('{0}: Not match table length.'.format(code))
@@ -712,11 +796,31 @@ for count in range(len(tables[3])):
         print(e)
 
 
+# In[ ]:
+
+(tables[3]['会計基準'] != tables[9]['会計基準']).all() and (tables[3]['決算期'] != tables[9]['決算期']).all()
+
+
+# In[ ]:
+
+((tables[3][['会計基準', '発表日']] != tables[9][['会計基準', '発表日']]).any()).any()
+
+
+# In[ ]:
+
+((tables[3][['会計基準', '決算期']] != tables[9][['会計基準', '決算期']]).any()).any()
+
+
+# In[ ]:
+
+(tables[3]['会計基準'] != tables[9]['会計基準']).any()
+
+
 # # 保存した html ファイルからテーブル属性のみ読み込み、整形
 
 # In[ ]:
 
-code = 7203
+code = 8439
 
 
 # In[ ]:
@@ -730,8 +834,6 @@ tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.f
 # 列数が 5 以下のテーブルを削除
 tables = list(filter(lambda x: len(x.columns) > 5, tables))
 
-
-# ## リスト、テーブルの概要
 
 # In[ ]:
 
@@ -740,95 +842,128 @@ len(tables)
 
 # In[ ]:
 
-len(tables[12])
+# 抽出用テーブルの作成
+pl_table = pd.DataFrame()
+fc_table = pd.DataFrame()
+qr_table = pd.DataFrame()
+bs_table = pd.DataFrame()
+
+# 必要なテーブルの抽出
+# リストを要素ごとに for で回す書き方
+for table in tables:
+    # 通期業績: profit and loss statement
+    if len(table.columns) == 8: 
+        if (table.columns[-2] == "１株配") & (pl_table.shape[1] == 0): 
+            pl_table = table.copy()
+    # 業績予想: forecast
+    if len(table.columns) >= 8: 
+        if (table.columns[1] == "修正日") & (fc_table.shape[1] == 0): 
+            fc_table = table.copy()
+    # 3ヶ月業績: quater
+    if len(table.columns) == 8: 
+        if (table.columns[-2] == "売上営業損益率") & (qr_table.shape[1] == 0): 
+            qr_table = table.copy()
+    # 財務: balance sheet
+    if len(table.columns) == 8: 
+        if (table.columns[1] == "１株純資産") & (bs_table.shape[1] == 0): 
+            bs_table = table.copy()
 
 
-# In[ ]:
-
-len(tables[12].columns)
-
-
-# ## tables[2] 銘柄概要
-
-# In[ ]:
-
-tables[2]
-
-
-# ## tables[3] 通期業績
-# 通期業績テーブルの予想値の行は業績予想修正履歴テーブルに連結?
-# In[ ]:
-
-# 保存した html からテーブル属性を読み込み
-tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
-
-
-# In[ ]:
-
-# 列数が 5 以下のテーブルを削除
-tables = list(filter(lambda x: len(x.columns) > 5, tables))
-
-
+# ## pl_table (tables[3]) 通期業績
+# 株プロに無い項目: １株配
 # In[ ]:
 
 tables[3]
-# 株プロに無い項目: １株配
+
+
+# In[ ]:
+
+# 通期業績テーブルの抽出 (上書き)
+pl_table = pd.DataFrame()
+# リストを要素ごとに for で回す書き方
+for table in tables:
+    # 通期業績: profit and loss statement
+    if len(table.columns) == 8: 
+        if (table.columns[-2] == "１株配") & (pl_table.shape[1] == 0): 
+            pl_table = table.copy()
+
+
+# In[ ]:
+
+pl_table
 
 
 # In[ ]:
 
 # 全ての列項目がnullの行を除去
-tables[3] = tables[3][~tables[3].isnull().all(axis=1)].reset_index(drop=True)
+pl_table = pl_table[~pl_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
 
 # 予想値と前期比の行を除去
-tables[3] = tables[3][~((tables[3]['決算期'].str.contains('予')) | (tables[3]['決算期'].str.contains('前期比')))].reset_index(drop=True)
+pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
 
 # In[ ]:
 
 # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
-tables[3][['会計基準', '決算期']] = pd.DataFrame(list(tables[3]['決算期'].str.split(' ')))
+if not pl_table['決算期'].str.contains(' ').all():
+    pl_table['会計基準'] = list('J' * len(pl_table))
+else:
+    pl_table[['会計基準', '決算期']] = pd.DataFrame(list(pl_table['決算期'].str.split(' ')))
 
 
 # In[ ]:
 
 # 列の並び替え
-tables[3] = tables[3][['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
+pl_table = pl_table[['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
+
+
+# In[ ]:
+
+# 数値の列の '－'  を NaN に置換
+num_col = ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')
+for key in num_col:
+    if pl_table[key].dtypes == object:
+        pl_table.loc[~pl_table[key].str.replace('.', '').str.isnumeric(), key] = np.nan
+        # .str を2回も使わないといけないのはなんだか。。。
+        # pl_table.loc[pl_table[key].str.contains('－'), key] = np.nan
+        # この書き方だと '－'  以外の文字列に対応できないので不安
 
 
 # In[ ]:
 
 # 100万円単位換算
-tables[3][['売上高', '営業益', '経常益', '最終益']] = tables[3][['売上高', '営業益', '経常益', '最終益']].apply(lambda x: x * 1000000)
+million_col = ('売上高', '営業益', '経常益', '最終益')
+pl_table.loc[:, million_col] = pl_table.loc[:, million_col].apply(lambda x: x * 1000000)
 
 
 # In[ ]:
 
 # 型変換
-tables[3]['１株配'] = tables[3]['１株配'].astype(float)
+# 辞書内包表記による一括変換
+pl_table = pl_table.astype({x: float for x in ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')})
 
 
 # In[ ]:
 
-# 日付のパース、datetime.dateへの型変換
-# tables[3]['決算期'] = tables[3]['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
-tables[3]['発表日'] = tables[3]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+# 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
+# pl_table['決算期'] = pl_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
+pl_table['発表日'] = pl_table.loc[pl_table['発表日'] != '－', '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 # pandasのTimestampへの型変換
-tables[3]['発表日'] = pd.to_datetime(tables[3]['発表日'], format='%Y-%m-%d')
-# tables[3]['決算期'] = pd.to_datetime(tables[3]['決算期'], format='%Y-%m-%d')
+pl_table['発表日'] = pd.to_datetime(pl_table['発表日'], format='%Y-%m-%d')
+# pl_table['決算期'] = pd.to_datetime(pl_table['決算期'], format='%Y-%m-%d')
 
 
 # In[ ]:
 
-tables[3].dtypes
+pl_table.dtypes
 
 
 # In[ ]:
 
-tables[3]
+pl_table
 
 
 # In[ ]:
@@ -842,19 +977,7 @@ kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '�
 kabupro.columns
 
 
-# ## tables[4] 業績予想
-# 通期業績テーブルの予想値の行は業績予想修正履歴テーブルに連結?
-# In[ ]:
-
-# 保存した html からテーブル属性を読み込み
-tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
-
-
-# In[ ]:
-
-# 列数が 5 以下のテーブルを削除
-tables = list(filter(lambda x: len(x.columns) > 5, tables))
-
+# ## fc_table (tables[4]) 業績予想
 
 # In[ ]:
 
@@ -863,12 +986,17 @@ tables[4]
 
 # In[ ]:
 
-tables[4].columns
+fc_table
 
 
 # In[ ]:
 
-tables[4].columns = ['会計基準', '決算期', '発表日', 
+fc_table.columns
+
+
+# In[ ]:
+
+fc_table.columns = ['会計基準', '決算期', '発表日', 
                                    '結合修正方向', '売上高修正方向', '営業益修正方向', '経常益修正方向', '最終益修正方向', '修正配当修正方向', 
                                    '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当',]
 
@@ -876,18 +1004,18 @@ tables[4].columns = ['会計基準', '決算期', '発表日',
 # In[ ]:
 
 # 実体行
-tables[4][tables[4].index % 2 == 0].reset_index(drop=True)
+fc_table[fc_table.index % 2 == 0].reset_index(drop=True)
 
 
 # In[ ]:
 
 # 不要行
-tables[4][tables[4].index % 2 != 0]
+fc_table[fc_table.index % 2 != 0]
 
 
 # In[ ]:
 
-tables[4].columns
+fc_table.columns
 
 
 # In[ ]:
@@ -895,119 +1023,53 @@ tables[4].columns
 # 不要行、不要列の削除、並び替え
 # 実績(と修正配当)はいる?いらない?
 # 実績の発表と同時に次の予想が出ているのでやっぱりここではいらないのかな?
-tables[4] = tables[4].ix[tables[4].index % 2 == 0, ['会計基準', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '発表日']].reset_index(drop=True)
-tables[4] = tables[4].ix[tables[4]['決算期'] != '実績']
+fc_table = fc_table.ix[fc_table.index % 2 == 0, ['会計基準', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '発表日']].reset_index(drop=True)
+fc_table = fc_table.ix[fc_table['決算期'] != '実績']
 
 
 # In[ ]:
 
 # 決算期の NaN 埋め
-tables[4]['決算期'] = tables[4]['決算期'].fillna(method='ffill')
+fc_table['決算期'] = fc_table['決算期'].fillna(method='ffill')
 
 
 # In[ ]:
 
 # 100万円単位換算
-tables[4][['予想売上高', '予想営業益', '予想経常益', '予想最終益']] = tables[4][['予想売上高', '予想営業益', '予想経常益', '予想最終益']].apply(lambda x: x * 1000000)
+fc_table[['予想売上高', '予想営業益', '予想経常益', '予想最終益']] = fc_table[['予想売上高', '予想営業益', '予想経常益', '予想最終益']].apply(lambda x: x * 1000000)
 
 
 # In[ ]:
 
 # 日付のパース、datetime.dateへの型変換
-# tables[4]['決算期'] = tables[4]['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
-tables[4]['発表日'] = tables[4]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+# fc_table['決算期'] = fc_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
+fc_table['発表日'] = fc_table['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 # pandasのTimestampへの型変換
-tables[4]['発表日'] = pd.to_datetime(tables[4]['発表日'], format='%Y-%m-%d')
-# tables[4]['決算期'] = pd.to_datetime(tables[4]['決算期'], format='%Y-%m-%d')
+fc_table['発表日'] = pd.to_datetime(fc_table['発表日'], format='%Y-%m-%d')
+# fc_table['決算期'] = pd.to_datetime(fc_table['決算期'], format='%Y-%m-%d')
 
 
 # In[ ]:
 
 # 修正配当用の処理なので不要
 # '－'  を NaN に置換
-# tables[4].loc[~tables[4]['修正配当'].str.isnumeric(), '修正配当'] = np.nan
+# fc_table.loc[~fc_table['修正配当'].str.isnumeric(), '修正配当'] = np.nan
 # 型変換
-# tables[4]['修正配当'] = tables[4]['修正配当'].astype(float)
+# fc_table['修正配当'] = fc_table['修正配当'].astype(float)
 
 
 # In[ ]:
 
-tables[4]
+fc_table
 
 
 # In[ ]:
 
-tables[4].dtypes
+fc_table.dtypes
 
 
-# ## tables[5] 過去最高 【実績】
-# 不要かな？
-# 百万単位
-# In[ ]:
-
-tables[5]
-
-
-# ## tables[6] 下期業績 (過去3年 + 今年予想 + 前年同期比)
-# 不要かな？
-# ちょっと株プロと見比べてみたいけどめんどくさい
-# 百万単位
-# In[ ]:
-
-tables[6]
-
-
-# In[ ]:
-
-tables[6].columns
-
-
-# ## tables[7] 第２四半期累計決算【実績】 (過去3年 + 前年同期比)
-# 不要かな？
-# ちょっと株プロと見比べてみよう → 同じみたい
-# 対通期進捗率って経常益の最終的な通期実績に対して? 今年度分は予想に対して？
-# 百万単位
-# In[ ]:
-
-tables[7]
-
-
-# In[ ]:
-
-kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'] == '第2四半期'), 
-           ['連結個別', '期首', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(3)
-
-
-# In[ ]:
-
-kabupro.ix[(kabupro['証券コード'] == code)& (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'].isin(['第2四半期', '通期'])), # 
-           ['連結個別', '期首', '決算期間', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(5)
-
-
-# In[ ]:
-
-tables[4].tail(1)
-
-
-# In[ ]:
-
-# 比較参照用
-kabupro.columns
-
-
-# ## tables[8] ３ヵ月業績の推移【実績】(過去5年 + 前年同期比) 累積ではなく差分
-
-# In[ ]:
-
-# 保存した html からテーブル属性を読み込み
-tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
-
-
-# In[ ]:
-
-# 列数が 5 以下のテーブルを削除
-tables = list(filter(lambda x: len(x.columns) > 5, tables))
-
+# ## qr_table (qr_table) ３ヵ月業績の推移【実績】(過去5年 + 前年同期比) 累積ではなく差分
+# 株プロに無い項目: 売上営業損益率 = 営業益 / 売上高?
 # 不要かな？
 # ちょっと株プロと見比べてみよう → １株益の値が揃わない
 # 修正発表があった項目は上書きされてしまっていると思われる
@@ -1016,63 +1078,67 @@ tables = list(filter(lambda x: len(x.columns) > 5, tables))
 # 前年同期比はいらなそう
 # In[ ]:
 
-tables[8]
-# 株プロに無い項目: 売上営業損益率 = 営業益 / 売上高?
+qr_table
+
+
+# In[ ]:
+
+qr_table
 
 
 # In[ ]:
 
 # 全ての列項目がnullの行を除去
-tables[8] = tables[8][~tables[8].isnull().all(axis=1)].reset_index(drop=True)
+qr_table = qr_table[~qr_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
 
 # 前年同期比の行を除去
-tables[8] = tables[8][~tables[8]['決算期'].str.contains('前年同期比')].reset_index(drop=True)
+qr_table = qr_table[~qr_table['決算期'].str.contains('前年同期比')].reset_index(drop=True)
 
 
 # In[ ]:
 
 # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
-tables[8][['会計基準', '四半期期首']] = pd.DataFrame(list(tables[8]['決算期'].str.split(' ')))
+qr_table[['会計基準', '四半期期首']] = pd.DataFrame(list(qr_table['決算期'].str.split(' ')))
 
 
 # In[ ]:
 
 # 列の並び替え
-tables[8] = tables[8][['会計基準', '四半期期首', '売上高', '営業益', '経常益', '最終益', '１株益', '売上営業損益率', '発表日']]
+qr_table = qr_table[['会計基準', '四半期期首', '売上高', '営業益', '経常益', '最終益', '１株益', '売上営業損益率', '発表日']]
 
 
 # In[ ]:
 
-tables[8].columns
+qr_table.columns
 
 
 # In[ ]:
 
-tables[8].columns = ['会計基準', '四半期期首', '四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益', '四半期１株益', '四半期売上営業損益率', '発表日']
+qr_table.columns = ['会計基準', '四半期期首', '四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益', '四半期１株益', '四半期売上営業損益率', '発表日']
 
 
 # In[ ]:
 
 # 100万円単位換算
-tables[8][['四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益']] = tables[8][['四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益']].apply(lambda x: x * 1000000)
+qr_table[['四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益']] = qr_table[['四半期売上高', '四半期営業益', '四半期経常益', '四半期最終益']].apply(lambda x: x * 1000000)
 
 
 # In[ ]:
 
 # 日付のパース、datetime.dateへの型変換
-tables[8]['四半期期首'] = tables[8]['四半期期首'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date())
-tables[8]['発表日'] = tables[8]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+qr_table['四半期期首'] = qr_table['四半期期首'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date())
+qr_table['発表日'] = qr_table['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 # pandasのTimestampへの型変換
-tables[8]['四半期期首'] = pd.to_datetime(tables[8]['四半期期首'], format='%Y-%m-%d')
-tables[8]['発表日'] = pd.to_datetime(tables[8]['発表日'], format='%Y-%m-%d')
+qr_table['四半期期首'] = pd.to_datetime(qr_table['四半期期首'], format='%Y-%m-%d')
+qr_table['発表日'] = pd.to_datetime(qr_table['発表日'], format='%Y-%m-%d')
 
 
 # In[ ]:
 
-tables[8].dtypes
+qr_table.dtypes
 
 
 # __比較検証用に株プロの四半期業績の差分を作ってみる__
@@ -1130,21 +1196,11 @@ diff_test[['決算期', '期末', '売上高差分', '営業利益差分', '経�
 
 # In[ ]:
 
-tables[8]
+qr_table
 
 
-# ## tables[9] 財務 【実績】
-
-# In[ ]:
-
-# 保存した html からテーブル属性を読み込み
-tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
-
-
-# In[ ]:
-
-# 列数が 5 以下のテーブルを削除
-tables = list(filter(lambda x: len(x.columns) > 5, tables))
+# ## bs_table (tables[9]) 財務 【実績】
+# 株プロに無い項目: 自己資本比率, 自己資本, 剰余金, 有利子負債倍率
 
 # 2000年以前の財務実績の発表日は全体的に信用できない
 # 1998年は何らかの日付で固定 or 捨て、1999年と2000年は通期業績の発表日と同じにする
@@ -1152,79 +1208,99 @@ tables = list(filter(lambda x: len(x.columns) > 5, tables))
 # 修正発表があった項目は上書きされてしまっていると思われる
 # In[ ]:
 
+# 財務テーブルの抽出 (上書き)
+bs_table = pd.DataFrame()
+# リストを要素ごとに for で回す書き方
+for table in tables:
+    if len(table.columns) == 8: 
+        if (table.columns[1] == "１株純資産") & bs_table.shape[1] == 0: 
+            bs_table = table
+
+
+# In[ ]:
+
 tables[9]
-# 株プロに無い項目: 自己資本比率, 自己資本, 剰余金, 有利子負債倍率
 
 
 # In[ ]:
 
-tables[9].columns
+bs_table
 
 
 # In[ ]:
 
-# 7203 トヨタ 元の値が '90/08/01' で明らかにおかしい。これどうしよう。。。
-tables[9].ix[2, '発表日'] = '99/08/01'
+bs_table.columns
 
 
 # In[ ]:
 
 # 全ての列項目がnullの行を除去
-tables[9] = tables[9][~tables[9].isnull().all(axis=1)].reset_index(drop=True)
+bs_table = bs_table[~bs_table.isnull().all(axis=1)].reset_index(drop=True)
+
+
+# In[ ]:
+
+for key, column in bs_table.iteritems():
+    if column.dtypes == object:
+        print
+        # bs_table.loc[bs_table[key].str.contains('－'), key] = np.nan
 
 
 # In[ ]:
 
 # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
-tables[9][['会計基準', '決算期']] = pd.DataFrame(list(tables[9]['決算期'].str.split(' ')))
+if not bs_table['決算期'].str.contains(' ').all():
+    bs_table['会計基準'] = list('J' * len(bs_table))
+else:
+    bs_table[['会計基準', '決算期']] = pd.DataFrame(list(bs_table['決算期'].str.split(' ')))
 
 
 # In[ ]:
 
 # 列の並び替え
-tables[9] = tables[9][['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
+bs_table = bs_table[['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
 
 
 # In[ ]:
 
 # 決算期が 'yyyy.mm' 表記ではない行は確定決算前と判断して削除
-tables[9] = tables[9][tables[9]['決算期'].str.contains('\d\d\d\d.\d\d')]
+bs_table = bs_table[bs_table['決算期'].str.contains('\d\d\d\d.\d\d')]
 
 
 # In[ ]:
 
 # 決算期が 1998.03 のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
-tables[9] = tables[9][~tables[9]['決算期'].str.contains('1998.03')].reset_index(drop=True)
+bs_table = bs_table[~bs_table['決算期'].str.contains('1998.03')].reset_index(drop=True)
 
 
 # In[ ]:
 
 # '－'  を NaN に置換
 # .str を2回も使わないといけないのはなんだか。。。
-tables[9].loc[~tables[9]['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
-tables[9].loc[~tables[9]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
+bs_table.loc[~bs_table['１株純資産'].str.replace('.', '').str.isnumeric(), '１株純資産'] = np.nan
+bs_table.loc[~bs_table['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
 
 
 # In[ ]:
 
 # 型変換
-tables[9][['１株純資産', '有利子負債倍率']] = tables[9][['１株純資産', '有利子負債倍率']].astype(float)
+bs_table[['１株純資産', '有利子負債倍率']] = bs_table[['１株純資産', '有利子負債倍率']].astype(float)
 
 
 # In[ ]:
 
 # 100万円単位換算
-tables[9][['総資産', '自己資本', '剰余金']] = tables[9][['総資産', '自己資本', '剰余金']].apply(lambda x: x * 1000000)
+bs_table[['総資産', '自己資本', '剰余金']] = bs_table[['総資産', '自己資本', '剰余金']].apply(lambda x: x * 1000000)
 
 
 # In[ ]:
 
 # 日付のパース、datetime.dateへの型変換
-# tables[9]['決算期'] = tables[9]['決算期'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date()) # 日付ではないので文字列のままの方がいいかも？
-tables[9]['発表日'] = tables[9]['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+# bs_table['決算期'] = bs_table['決算期'].apply(lambda x: parse(x.replace('-', '.'), yearfirst=True).date()) # 日付ではないので文字列のままの方がいいかも？
+bs_table['発表日'] = bs_table['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 # pandasのTimestampへの型変換
-# tables[9]['決算期'] = pd.to_datetime(tables[9]['決算期'], format='%Y-%m-%d')
-tables[9]['発表日'] = pd.to_datetime(tables[9]['発表日'], format='%Y-%m-%d')
+# bs_table['決算期'] = pd.to_datetime(bs_table['決算期'], format='%Y-%m-%d')
+bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
 
 
 # In[ ]:
@@ -1234,17 +1310,17 @@ tables[3]
 
 # In[ ]:
 
-tables[9]
+bs_table
 
 
 # In[ ]:
 
-for count in range(len(tables[3])):
+for count in range(len(pl_table)):
     try:
-        if len(tables[3]) == len(tables[9]):
-            if (tables[3].ix[count, '会計基準'] == tables[9].ix[count, '会計基準'] and tables[3].ix[count, '決算期'] == tables[9].ix[count, '決算期']):
-                print('True {0}'.format(tables[3].ix[count, '発表日']))
-                tables[9].ix[count, '発表日'] = tables[3].ix[count, '発表日']
+        if len(pl_table) == len(bs_table):
+            if (pl_table.ix[count, '会計基準'] == bs_table.ix[count, '会計基準'] and pl_table.ix[count, '決算期'] == bs_table.ix[count, '決算期']):
+                print('True {0}'.format(pl_table.ix[count, '発表日']))
+                bs_table.ix[count, '発表日'] = pl_table.ix[count, '発表日']
         else:
             print('{0}: Not match table length.'.format(code))
     except Exception as e:
@@ -1254,12 +1330,12 @@ for count in range(len(tables[3])):
 
 # In[ ]:
 
-tables[9].dtypes
+bs_table.dtypes
 
 
 # In[ ]:
 
-tables[9]
+bs_table
 # 株プロに無い項目: 自己資本比率, 自己資本, 剰余金, 有利子負債倍率
 
 
@@ -1275,12 +1351,74 @@ kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '�
 kabupro.columns
 
 
+# ## tables[2] 銘柄概要
+
+# In[ ]:
+
+tables[2]
+
+
+# ## tables[5] 過去最高 【実績】
+# 不要かな？
+# 百万単位
+# In[ ]:
+
+tables[5]
+
+
+# ## tables[6] 下期業績 (過去3年 + 今年予想 + 前年同期比)
+# 不要かな？
+# ちょっと株プロと見比べてみたいけどめんどくさい
+# 百万単位
+# In[ ]:
+
+tables[6]
+
+
+# In[ ]:
+
+tables[6].columns
+
+
+# ## tables[7] 第２四半期累計決算【実績】 (過去3年 + 前年同期比)
+# 不要かな？
+# ちょっと株プロと見比べてみよう → 同じみたい
+# 対通期進捗率って経常益の最終的な通期実績に対して? 今年度分は予想に対して？
+# 百万単位
+# In[ ]:
+
+tables[7]
+
+
+# In[ ]:
+
+kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'] == '第2四半期'), 
+           ['連結個別', '期首', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(3)
+
+
+# In[ ]:
+
+kabupro.ix[(kabupro['証券コード'] == code)& (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'].isin(['第2四半期', '通期'])), # 
+           ['連結個別', '期首', '決算期間', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(5)
+
+
+# In[ ]:
+
+tables[4].tail(1)
+
+
+# In[ ]:
+
+# 比較参照用
+kabupro.columns
+
+
 # # (準備) 単一銘柄の決算ページの取得
 
 # In[ ]:
 
 # 個別銘柄の決算ページを開く
-code = 9437 # トヨタ
+code = 1301 # トヨタ
 
 print('Navigating...', file=sys.stderr)
 browser.open('https://kabutan.jp/stock/finance?code={0}&mode=k'.format(code))
@@ -1291,17 +1429,39 @@ assert '決算' in browser.parsed.title.string
 print(browser.select('.kobetsu_data_table1_meigara')[0].text.strip())
 
 
+# In[ ]:
+
+# 個別銘柄の決算ページを開く
+code = 1301 # トヨタ
+
+print('Navigating...', file=sys.stderr)
+browser.open('https://s.kabutan.jp/stock/finance?code={0}&mode=k'.format(code))
+
+# 決算ページにいることを確認する
+assert '決算' in browser.parsed.title.string
+
+# print(browser.select('.kobetsu_data_table1_meigara')[0].text.strip())
+
+
 # ## html 全体の取得と保存
 
 # In[ ]:
 
 kessan_html = browser.find()
+
+
+# In[ ]:
+
 kessan_html
 
 
 # In[ ]:
 
 tables = pd.read_html(str(kessan_html), header=0)
+
+
+# In[ ]:
+
 tables[11]
 
 
@@ -1342,6 +1502,12 @@ tables = pd.read_html('/Users/Really/Stockyard/kabutan_kessan_tables.html', head
 
 
 # # (準備) 全テーブル内容の確認
+
+# In[ ]:
+
+# 保存した html からテーブル属性を読み込み
+tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
+
 # 14 以降はテーブル数が動的に変化する
 
 #  0 主要指標情報 日経平均
@@ -1528,4 +1694,9 @@ tables[28]
 # In[ ]:
 
 tables[29]
+
+
+# In[ ]:
+
+
 

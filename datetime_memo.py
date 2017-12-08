@@ -5,7 +5,7 @@
 # 
 # http://www.python-izm.com/contents/basis/date.shtml
 
-# In[15]:
+# In[ ]:
 
 import datetime
 
@@ -43,7 +43,7 @@ print(todaydetail.strftime("%Y/%m/%d %H:%M:%S"))
 # 
 # https://qiita.com/mykysyk@github/items/e15d7b2b1a988b8e29d4
 
-# In[4]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -52,7 +52,7 @@ datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 
 # ### 現在日時のdatetimeオブジェクトを取得
 
-# In[5]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -61,7 +61,7 @@ datetime.now()	# datetime.datetime(2014, 1, 2, 3, 4, 5, 000000)
 
 # ### datetimeオブジェクトを加算する
 
-# In[3]:
+# In[ ]:
 
 from datetime import datetime, timedelta
 
@@ -77,7 +77,7 @@ datetime(2014,1,2,3,4,5) + timedelta(microseconds=1) # datetime.datetime(2014, 1
 
 # ### datetimeオブジェクトを減算する
 
-# In[6]:
+# In[ ]:
 
 from datetime import datetime, timedelta
 
@@ -93,7 +93,7 @@ datetime(2014,1,2,3,4,5) + timedelta(microseconds=-1) # datetime.datetime(2014, 
 
 # ### datetimeオブジェクト → 数値
 
-# In[7]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -107,7 +107,7 @@ datetime(2014,1,2,3,4,5).second # 5
 
 # ### datetimeオブジェクト → 文字列
 
-# In[8]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -135,7 +135,7 @@ datetime(2014,1,2,3,4,5).strftime('%s') # 1388599445	unixtime
 
 # ### 文字列 → datetimeオブジェクト
 
-# In[9]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -144,7 +144,7 @@ datetime.strptime('2014-01-02 03:04:05', '%Y-%m-%d %H:%M:%S') # datetime.datetim
 
 # ### datetimeオブジェクト → unixtime
 
-# In[11]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -153,7 +153,7 @@ datetime(2014,1,2,3,4,5).strftime('%s') # 1388599445
 
 # ### unixtime → datetimeオブジェクト
 
-# In[12]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -162,7 +162,7 @@ datetime.fromtimestamp(1388599445) # datetime.datetime(2014, 1, 2, 4, 3, 5)
 
 # ### datetimeオブジェクト → dateオブジェクト
 
-# In[13]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -171,7 +171,7 @@ datetime(2014,1,2,3,4,5).date() # datetime.date(2014, 1, 2)
 
 # ### datetimeオブジェクト → timeオブジェクト
 
-# In[14]:
+# In[ ]:
 
 from datetime import datetime
 
@@ -258,54 +258,54 @@ datetime(2014,1,2,3,4,5).time() # datetime.time(3, 4, 5)
 from datetime import datetime, date, timezone, timedelta
 
 
-# In[24]:
+# In[ ]:
 
 # NG
 datetime(2016, 7)
 
 
-# In[17]:
+# In[ ]:
 
 datetime(2016, 7, 5)
 
 
-# In[18]:
+# In[ ]:
 
 datetime(2016, 7, 5, 13)
 
 
-# In[19]:
+# In[ ]:
 
 datetime(2016, 7, 5, 13, 45)
 
 
-# In[20]:
+# In[ ]:
 
 datetime(2016, 7, 5, 13, 45, 27)
 
 
-# In[21]:
+# In[ ]:
 
 datetime(2016, 7, 5, 13, 45, 27, 123456)
 
 
-# In[22]:
+# In[ ]:
 
 datetime(2016, 7, 5, 13, 45, 27, 123456, timezone(timedelta(hours=+9)))
 
 
-# In[23]:
+# In[ ]:
 
 # NG
 date(2016, 7)
 
 
-# In[25]:
+# In[ ]:
 
 date(2016, 7, 5)
 
 
-# In[26]:
+# In[ ]:
 
 # NG
 date(2016, 7, 5, 0)
@@ -316,12 +316,12 @@ date(2016, 7, 5, 0)
 # タイムスタンプから生成することもできます。
 # 現在日時のタイムスタンプについては、次項を参照してください。
 
-# In[27]:
+# In[ ]:
 
 datetime.fromtimestamp(12345678901.234567)
 
 
-# In[28]:
+# In[ ]:
 
 date.fromtimestamp(12345678901.234567)
 
@@ -336,18 +336,18 @@ date.fromtimestamp(12345678901.234567)
 # 
 # datetime.date()メソッドで、日付部分だけをdateとして取り出すことができます。
 
-# In[29]:
+# In[ ]:
 
 from datetime import datetime, date
 
 
-# In[30]:
+# In[ ]:
 
 dt = datetime.now()
 dt
 
 
-# In[31]:
+# In[ ]:
 
 dt.date()
 
@@ -357,17 +357,17 @@ dt.date()
 # datetime.now()は、現在日時を示すdatetimeオブジェクトを返します。  
 # date.today()は、当日を示すdateオブジェクトを返します。
 
-# In[32]:
+# In[ ]:
 
 from datetime import datetime, date
 
 
-# In[33]:
+# In[ ]:
 
 datetime.now()
 
 
-# In[34]:
+# In[ ]:
 
 date.today()
 
@@ -375,12 +375,12 @@ date.today()
 # timeモジュールのtime()関数で現在日時のタイムスタンプを取得できます。  
 # タイムスタンプについては、前項を参照してください。
 
-# In[35]:
+# In[ ]:
 
 import time
 
 
-# In[36]:
+# In[ ]:
 
 time.time()
 
@@ -393,17 +393,17 @@ time.time()
 # datetimeモジュールでは、datetime.strptime()関数を使います。  
 # ただし、以下の結果を見てもらうと分かる通り、この関数は融通が利きません。
 
-# In[37]:
+# In[ ]:
 
 from datetime import datetime, timezone, timedelta
 
 
-# In[38]:
+# In[ ]:
 
 datetime.strptime("2016/07/05 13:45:06", "%Y/%m/%d %H:%M:%S")
 
 
-# In[41]:
+# In[ ]:
 
 # NG
 datetime.strptime("2016/07/05 13:45", "%Y/%m/%d %H:%M:%S")
@@ -411,29 +411,34 @@ datetime.strptime("2016/07/05 13:45", "%Y/%m/%d %H:%M:%S")
 
 # dateutilモジュールのサブモジュールparserのparse()関数が強力なので、そちらを使いましょう。
 
-# In[42]:
+# In[ ]:
 
 from dateutil.parser import parse
 
 
-# In[43]:
+# In[ ]:
 
 parse("Tue Aug 23 17:00:35 JST 2016")
 
 
-# In[44]:
+# In[ ]:
 
 parse("2016-07-03T11:22:33Z")
 
 
-# In[45]:
+# In[ ]:
 
 parse("2016/07/03 04:05:06")
 
 
-# In[46]:
+# In[ ]:
 
 parse("2016/07/03")
+
+
+# In[ ]:
+
+parse('16/07/03', yearfirst=True)
 
 
 # なお、Python2の場合、下記のようなエラーが出ました。
@@ -454,64 +459,64 @@ parse("2016/07/03")
 # 
 # 任意のフォーマットで文字列に変換したい場合は、strftime()メソッドを使用します。
 
-# In[47]:
+# In[ ]:
 
 from datetime import datetime, timezone, timedelta
 
 
-# In[48]:
+# In[ ]:
 
 dt1 = datetime(2016, 7, 5, 13, 45) # naive
 dt2 = datetime(2016, 7, 5, 13, 45, tzinfo=timezone(timedelta(hours=+9))) # aware
 d = dt1.date()
 
 
-# In[51]:
+# In[ ]:
 
 dt1, dt2, d
 
 
-# In[52]:
+# In[ ]:
 
 dt1.isoformat()
 
 
-# In[53]:
+# In[ ]:
 
 str(dt1)
 
 
-# In[54]:
+# In[ ]:
 
 dt2.isoformat()
 
 
-# In[55]:
+# In[ ]:
 
 str(dt2)
 
 
-# In[56]:
+# In[ ]:
 
 d.isoformat()
 
 
-# In[57]:
+# In[ ]:
 
 str(d)
 
 
-# In[58]:
+# In[ ]:
 
 dt1.strftime("%Y/%m/%d %H:%M:%S")
 
 
-# In[59]:
+# In[ ]:
 
 dt1.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 
 
-# In[60]:
+# In[ ]:
 
 dt2.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 
@@ -531,39 +536,39 @@ dt2.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 # （TypeError: can't compare offset-naive and offset-aware datetimes）
 # どちらかの型にそろえてから比較する必要があります。
 
-# In[61]:
+# In[ ]:
 
 from datetime import datetime, date
 
 
-# In[63]:
+# In[ ]:
 
 dt1 = datetime(2016, 7, 1, 22, 30)
 dt2 = datetime(2016, 7, 5, 13, 45)
 
 
-# In[64]:
+# In[ ]:
 
 dt1 == datetime(2016, 7, 1, 22, 30, 0)
 
 
-# In[65]:
+# In[ ]:
 
 dt1 == dt1, dt1 == dt2, dt1 != dt1, dt1 != dt2, dt1 < dt2, dt1 > dt2, dt1 <= dt1, dt2 <= dt1, dt2 >= dt2, dt1 >= dt2
 
 
-# In[66]:
+# In[ ]:
 
 d1 = dt1.date()
 d2 = dt2.date()
 
 
-# In[68]:
+# In[ ]:
 
 d1 == date(2016, 7, 1)
 
 
-# In[69]:
+# In[ ]:
 
 d1 == d1, d1 == d2, d1 != d1, d1 != d2, d1 < d2, d1 > d2, d1 <= d1, d2 <= d1, d2 >= d2, d1 >= d2
 
@@ -581,47 +586,47 @@ d1 == d1, d1 == d2, d1 != d1, d1 != d2, d1 < d2, d1 > d2, d1 <= d1, d2 <= d1, d2
 # （TypeError: can't subtract offset-naive and offset-aware datetimes）  
 # どちらかの型にそろえてから計算する必要があります。
 
-# In[70]:
+# In[ ]:
 
 from datetime import datetime, date
 
 
-# In[71]:
+# In[ ]:
 
 d1, d2 = date(2016, 7, 1), date(2016, 7, 3)
 
 
-# In[72]:
+# In[ ]:
 
 type(d2 - d1)
 
 
-# In[73]:
+# In[ ]:
 
 d2 - d1
 
 
-# In[74]:
+# In[ ]:
 
 str(d2 - d1)
 
 
-# In[76]:
+# In[ ]:
 
 str(d1 - d2)
 
 
-# In[77]:
+# In[ ]:
 
 dt1, dt2 = datetime(2016, 7, 1, 10, 30), datetime(2016, 7, 3, 9, 10)
 
 
-# In[78]:
+# In[ ]:
 
 dt2 - dt1
 
 
-# In[79]:
+# In[ ]:
 
 str(dt2 - dt1)
 
@@ -634,29 +639,29 @@ str(dt2 - dt1)
 # そういう場合は、dateutilモジュールのサブモジュールrelativedeltaを使ってみましょう。  
 # 基本的にはこれで解決できるはずです。
 
-# In[80]:
+# In[ ]:
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
-# In[81]:
+# In[ ]:
 
 d1, d2 = date(2014, 11, 22), date(2016, 3, 1)
 
 
-# In[82]:
+# In[ ]:
 
 str(d2 - d1)
 
 
-# In[84]:
+# In[ ]:
 
 delta = relativedelta(d2, d1)
 delta
 
 
-# In[85]:
+# In[ ]:
 
 month_count = delta.years * 12 + delta.months
 month_count
@@ -667,7 +672,7 @@ month_count
 # ここで少し気になるのが、月末がからんでくる計算、特にうるう年の2月前後の場合です。  
 # そこで、2つの日付をそれぞれ1日ずつずらしていって、その場合のdeltaがどうなるかを確認してみました。
 
-# In[86]:
+# In[ ]:
 
 # 2つの日付を1日ずつずらしてrelativedeltaの結果を調べるスクリプト
 
@@ -697,36 +702,36 @@ for x in range(9):
 # datetime - datetimeやdate - dateがtimedeltaになることは既に書きましたが、  
 # 日付・日時の増減については、timedeltaを足し引きすることで、増減されたdatetimeやdateを得ることができます。
 
-# In[87]:
+# In[ ]:
 
 from datetime import datetime, date, timedelta
 
 
-# In[88]:
+# In[ ]:
 
 dt = datetime(2016, 7, 5, 13, 45)
 d = dt.date()
 
 
-# In[90]:
+# In[ ]:
 
 dt + timedelta(days=5, minutes=168)
 
 
-# In[92]:
+# In[ ]:
 
 d - timedelta(days=13)
 
 
 # 月単位での加減は、月数計算のときと同じく、dateutilモジュールのサブモジュールrelativedeltaを使用します。
 
-# In[93]:
+# In[ ]:
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
-# In[94]:
+# In[ ]:
 
 date(2016, 7, 5) - relativedelta(months=32)
 
@@ -738,30 +743,30 @@ date(2016, 7, 5) - relativedelta(months=32)
 # 
 # naiveなdatetimeをawareなdatetimeにするには、datetime.replace()メソッドを使います。
 
-# In[95]:
+# In[ ]:
 
 from datetime import datetime, timezone, timedelta
 
 
-# In[96]:
+# In[ ]:
 
 jst = timezone(timedelta(hours=+9)) # pytzを使う場合は pytz.timezone('Asia/Tokyo')
 jst
 
 
-# In[97]:
+# In[ ]:
 
 dt = datetime(2016, 7, 5, 13, 45) # naive
 dt
 
 
-# In[98]:
+# In[ ]:
 
 dt2 = dt.replace(tzinfo=jst) # aware
 dt2
 
 
-# In[99]:
+# In[ ]:
 
 str(dt2)
 
@@ -773,13 +778,13 @@ str(dt2)
 # 逆に、awareなdatetimeをnaiveなdatetimeにするには、同じくdatetime.replace()メソッドを使います。  
 # タイムゾーンには、「無し」を意味するNoneを指定します。
 
-# In[100]:
+# In[ ]:
 
 dt3 = dt2.replace(tzinfo=None)
 dt3
 
 
-# In[101]:
+# In[ ]:
 
 str(dt3)
 
@@ -792,37 +797,37 @@ str(dt3)
 # struct_time→timestamp(float)→datetime  
 # の順に変換します。
 
-# In[102]:
+# In[ ]:
 
 from datetime import datetime, date
 from time import localtime, mktime
 
 
-# In[106]:
+# In[ ]:
 
 tm = localtime() # struct_time
 tm
 
 
-# In[107]:
+# In[ ]:
 
 t = mktime(tm) # タイムスタンプ(float)に変換
 t
 
 
-# In[104]:
+# In[ ]:
 
 datetime.fromtimestamp(t)
 
 
-# In[105]:
+# In[ ]:
 
 date.fromtimestamp(t)
 
 
 # struct_timeがタプルであることを利用して、次のように書くこともできます。
 
-# In[108]:
+# In[ ]:
 
 datetime(*tm[:6])
 
@@ -835,23 +840,23 @@ datetime(*tm[:6])
 # 前項とは逆に、datetimeオブジェクトやdateオブジェクトをstruct_timeオブジェクトに変換したい場合は、
 # date.timetuple()メソッドを使うとstruct_timeが得られます。
 
-# In[109]:
+# In[ ]:
 
 from datetime import datetime
 
 
-# In[110]:
+# In[ ]:
 
 dt = datetime(2016, 7, 3, 12, 25)
 d = dt.date()
 
 
-# In[111]:
+# In[ ]:
 
 dt.timetuple()
 
 
-# In[112]:
+# In[ ]:
 
 d.timetuple()
 
@@ -863,12 +868,12 @@ d.timetuple()
 # 
 # 有限の日付リストを生成するには、timedeltaとrangeを組み合わせて、内包表記でリストを作る方法がすぐに思いつきました。
 
-# In[113]:
+# In[ ]:
 
 from datetime import date, timedelta
 
 
-# In[114]:
+# In[ ]:
 
 start_date = date(2016, 7, 5)
 a = [start_date + timedelta(days=x) for x in range(5)]
@@ -880,13 +885,13 @@ a
 # 
 # dateutilモジュールのrruleサブモジュールを使うと、1行で書けます。
 
-# In[115]:
+# In[ ]:
 
 from datetime import date
 from dateutil.rrule import rrule, DAILY
 
 
-# In[116]:
+# In[ ]:
 
 a = [x.date() for x in rrule(DAILY, count=5, dtstart=date(2016, 7, 5))]
 a
@@ -901,27 +906,27 @@ a
 # 
 # calendarモジュールのisleap関数を使います。
 
-# In[119]:
+# In[ ]:
 
 import calendar
 
 
-# In[120]:
+# In[ ]:
 
 calendar.isleap(2016)
 
 
-# In[121]:
+# In[ ]:
 
 calendar.isleap(2015)
 
 
-# In[122]:
+# In[ ]:
 
 from datetime import date
 
 
-# In[123]:
+# In[ ]:
 
 d = date(2016, 7, 5)
 calendar.isleap(d.year)
@@ -932,37 +937,37 @@ calendar.isleap(d.year)
 # datetimeモジュール内の日時関連オブジェクトは、Python3.5の時点では、timedelta(0)と等価のものを除き、すべてTrueと評価されます。  
 # （timezoneについては、ドキュメントに記載がありませんでしたので、「すべて」には含みません。）
 
-# In[124]:
+# In[ ]:
 
 from datetime import *
 
 
-# In[125]:
+# In[ ]:
 
 bool(datetime.fromtimestamp(0))
 
 
-# In[126]:
+# In[ ]:
 
 bool(date.fromtimestamp(0))
 
 
-# In[127]:
+# In[ ]:
 
 bool(time(0, 0, 0))
 
 
-# In[129]:
+# In[ ]:
 
 bool(timedelta(1))
 
 
-# In[130]:
+# In[ ]:
 
 bool(timedelta(0))
 
 
-# In[131]:
+# In[ ]:
 
 bool(timezone.utc)
 
@@ -981,12 +986,12 @@ bool(timezone.utc)
 # 
 # 他の言語でも使われる方法ですが、(処理後のタイムスタンプ － 処理前のタイムスタンプ)で算出します。
 
-# In[133]:
+# In[ ]:
 
 import time
 
 
-# In[136]:
+# In[ ]:
 
 t = time.time()
 time.sleep(3.1)
@@ -1021,33 +1026,33 @@ print(time.time() - t)
 # ```
 # ### Python3での実行結果
 
-# In[137]:
+# In[ ]:
 
 from datetime import datetime
 import pickle
 
 
-# In[138]:
+# In[ ]:
 
 dt = datetime(2016, 7, 5, 13, 45)
 
 
-# In[139]:
+# In[ ]:
 
 pickle.dumps(dt) # datetime
 
 
-# In[140]:
+# In[ ]:
 
 pickle.dumps(dt.date()) # date
 
 
-# In[141]:
+# In[ ]:
 
 pickle.dumps(dt.timetuple()) # struct_time
 
 
-# In[142]:
+# In[ ]:
 
 pickle.dumps(dt - dt) # timedelta
 
