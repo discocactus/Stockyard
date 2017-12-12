@@ -1179,6 +1179,27 @@ df_quote
 pl_csv = pd.read_csv('pl_table.csv', index_col = 0, dtype={'決算期': object}, parse_dates=['発表日'])
 
 
+# ## NaN の判定
+
+# In[ ]:
+
+# 行単位や列単位ではなく要素 (float) を判定したい場合、isnull() が使えない
+
+# math.isnan() を使う
+import math
+math.isnan(df.ix[0,0])
+
+# 同じ値を比較 (NaN 同士の比較は False になる仕様を利用)
+df.ix[0,0] == df.ix[0,0]
+
+
+# ## 列単位でのリネーム
+
+# In[ ]:
+
+df_sample.rename(columns={'score1': 'point1'})  #対応関係を辞書型で入れてやる
+
+
 # ## その他
 
 # In[ ]:
