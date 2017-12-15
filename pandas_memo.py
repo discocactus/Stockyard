@@ -25,6 +25,14 @@ import stock
 
 # In[ ]:
 
+# Jupyterの最期の評価値(pd.DataFrame)と同じように表を出力させたい時
+# 複数のデータフレームで構成されるリストを for 文ですべて表示したい時など
+from IPython.display import display, HTML
+# display(df)
+
+
+# In[ ]:
+
 importlib.reload(stock)
 
 
@@ -1143,6 +1151,13 @@ tables[27].loc[~tables[27]['１株純資産'].str.replace('.', '').str.isnumeric
 tables[27].loc[~tables[27]['有利子負債倍率'].str.replace('.', '').str.isnumeric(), '有利子負債倍率'] = np.nan
 
 
+# ## 文字列の数字部分と数字じゃない部分の集まりで分割したい
+
+# In[ ]:
+
+fc_table['予想修正配当'].apply(lambda x: re.findall(r'(\d+|\D+)', x))
+
+
 # ## 複数のデータフレームで構成されるリストから列数が任意の数以下のデータフレームを削除
 
 # In[ ]:
@@ -1198,6 +1213,25 @@ df.ix[0,0] == df.ix[0,0]
 # In[ ]:
 
 df_sample.rename(columns={'score1': 'point1'})  #対応関係を辞書型で入れてやる
+
+
+# ## 空の列の追加
+
+# In[ ]:
+
+a['d'] = float(NaN)
+
+
+# In[ ]:
+
+a['d'] = ''
+
+
+# ## 列名(以外でも)をリスト化 tolist()
+
+# In[ ]:
+
+lst = fc_table.columns.tolist()
 
 
 # ## その他

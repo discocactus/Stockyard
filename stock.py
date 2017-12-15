@@ -83,6 +83,17 @@ class sql:
         return result
 
 
+    def get_new_added_stock_code(self, start_index=0, end_index=None):
+        new_added_stock_table = pd.read_sql_table('new_added_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        
+        if end_index == None:
+            end_index = len(new_added_stock_table)
+
+        result = list(new_added_stock_table['code'][start_index : end_index])
+        
+        return result
+
+
     def statement_query(self, statement):
         result = pd.read_sql_query(statement, sql.engine, index_col=None)
         # ex. df = sql.statement_query('SELECT code, name FROM domestic_stock_table')
