@@ -1215,6 +1215,18 @@ df.ix[0,0] == df.ix[0,0]
 df_sample.rename(columns={'score1': 'point1'})  #対応関係を辞書型で入れてやる
 
 
+# ## 空のデータフレームを作成
+
+# In[ ]:
+
+df = pd.DataFrame(index=[1,2], columns=[1,2]) # NaN
+
+
+# In[ ]:
+
+df = pd.DataFrame("", index=[1,2], columns=[1,2]) # 空文字
+
+
 # ## 空の列の追加
 
 # In[ ]:
@@ -1232,6 +1244,39 @@ a['d'] = ''
 # In[ ]:
 
 lst = fc_table.columns.tolist()
+
+
+# ## 年月表記の Timestamp を月末の日付に
+
+# In[ ]:
+
+import pandas.tseries.offsets as offsets
+
+
+# In[ ]:
+
+pd.to_datetime(bs_table['決算期'], format='%Y.%m') + offsets.MonthEnd()
+
+
+# ## 特定の行(列)の削除
+
+# In[ ]:
+
+# 行 3 と 4 を削除
+df.drop([3,4])
+
+
+# In[ ]:
+
+# 列 A を削除
+df.drop("A", axis=1)
+
+
+# In[ ]:
+
+# Python の del ステートメントを利用する方法
+# 列 A を削除
+del df['A']
 
 
 # ## その他

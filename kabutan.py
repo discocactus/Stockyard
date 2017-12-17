@@ -54,7 +54,7 @@
 # 特に2000年3月期データの発表日が無いデータが多い（1216銘柄）。　
 # 「通期業績」と「財務 実績」それぞれの発表日でそれらしい方を選んで穴埋めした方がよさそう。
 
-# ６．発表日1990-08-01のデータはおかしい
+# ６．発表日1990-08-01のデータはおかしい -> 1999-08-01, 2001-01-01 もおかしいと思う
 # 実際は、1998-10-20からというのが正しい。
 # 「2910」など８銘柄。　BS側のデータが間違えている。　PL側は正しい。　決算期は「1999.04」
 # 2910,3103,4203,5103,6103,6203,7203,8143
@@ -88,6 +88,7 @@ from robobrowser import RoboBrowser
 from retry import retry
 from dateutil.parser import parse
 from datetime import datetime
+import pandas.tseries.offsets as offsets
 from IPython.display import display, HTML
 
 import stock
@@ -369,6 +370,12 @@ print(reading_code[-10:])
 print('Next start from {0}'.format(start_index + increase_number))
 
 
+# In[ ]:
+
+reading_code = [3975, 3995, 7196, 7810, 9262]
+reading_code
+
+
 # # 上場日本株全銘柄の決算ページの連続読み込み
 
 # ## get_html 関数 (retry 付き)
@@ -381,6 +388,21 @@ def get_html(url):
     assert '決算' in browser.parsed.title.string # 決算ページにいることを確認する
     stock_name = browser.select('.kobetsu_data_table1_meigara')[0].text.strip()  # モバイルサイトの場合はコメントアウト
     print('{0}: {1}'.format(code, stock_name))  # モバイルサイトの場合はコメントアウト
+    result = browser.find()
+    
+    return result
+
+
+# __モバイルサイト用__
+
+# In[ ]:
+
+@retry(tries=5, delay=1, backoff=2)
+def get_html(url):
+    browser.open(url)
+    assert '決算' in browser.parsed.title.string # 決算ページにいることを確認する
+    # stock_name = browser.select('.kobetsu_data_table1_meigara')[0].text.strip()  # モバイルサイトの場合はコメントアウト
+    # print('{0}: {1}'.format(code, stock_name))  # モバイルサイトの場合はコメントアウト
     result = browser.find()
     
     return result
@@ -406,12 +428,53 @@ for index in range(len(reading_code)):
     try:
         time.sleep(3 + np.random.randint(0, 3))
         
-        # url = 'https://kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
-        url = 'https://s.kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
+        url = 'https://kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
+        # url = 'https://s.kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
         result = get_html(url)
 
         with open('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), 'w') as write_html:
         # with open('/Users/Really/Stockyard/_kabutan_mobile_html/kabutan_{0}.html'.format(code), 'w') as write_html:
+            write_html.write(str(result))
+                    
+    except Exception as e:
+        logging.warning('{0} {1}: {2}'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code, e))
+        failed.append(code)
+        print('{0}: Failed in {1} at get_html'.format(index, code))
+        print(e)
+
+
+print('Failed in {0} stocks at get:'.format(len(failed)))
+print(failed)
+
+logging.info('{0} get_html Finished'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+
+# __モバイルサイト用__
+
+# In[ ]:
+
+# ロガー設定
+start_time = dt.datetime.now()
+logging.basicConfig(filename='get_kabutan_html_{0}.log'.format(start_time.strftime('%Y-%m-%d')), filemode='w', level=logging.INFO)
+logging.info('{0} get_html Started'.format(start_time.strftime('%Y-%m-%d %H:%M:%S')))
+
+failed = [] # 読み込みに失敗した銘柄のコードを書き込むリストを作成
+
+
+# 連続読み込み書き込み
+for index in range(len(reading_code)):
+    code = reading_code[index]
+    print(code) # モバイルサイト用
+    
+    try:
+        time.sleep(3 + np.random.randint(0, 3))
+        
+        # url = 'https://kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
+        url = 'https://s.kabutan.jp/stock/finance?code={0}&mode=k'.format(code)
+        result = get_html(url)
+
+        # with open('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), 'w') as write_html:
+        with open('/Users/Really/Stockyard/_kabutan_mobile_html/kabutan_{0}.html'.format(code), 'w') as write_html:
             write_html.write(str(result))
                     
     except Exception as e:
@@ -442,8 +505,22 @@ tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.f
 
 # In[ ]:
 
+for idx in range(len(tables)):
+    print(idx)
+    display(tables[idx])
+
+
+# In[ ]:
+
 # 保存した モバイル用 html からテーブルを読み込んでみる
 mobile = pd.read_html('/Users/Really/Stockyard/_kabutan_mobile_html/kabutan_{0}.html'.format(code), header=0)
+
+
+# In[ ]:
+
+for idx in range(len(mobile)):
+    print(idx)
+    display(mobile[idx])
 
 
 # __各銘柄のテーブル数をカウント__
@@ -498,159 +575,11 @@ for table_number in range(len(tables)):
     print('{0}: {1}'.format(table_number, len(tables[table_number].columns)))
 
 
-# In[ ]:
-
-for table_number in range(23, len(tables)):
-    print('table_number: {0}'.format(table_number))
-    display(tables[table_number])
-
-
-# __各銘柄の通期業績と財務のテーブル長の確認__  
-# __ついでに日付が合致するかどうかも見てもいいかも__
-
-# In[ ]:
-
-error_table = pd.DataFrame(columns=('code', 'error'))
-error_table['code'] = error_table['code'].astype(int)
-
-for index in range(len(reading_code)):
-    try:
-        # 保存した html からテーブル属性を読み込み
-        tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(reading_code[index]), header=0)
-        # 列数が 5 以下のテーブルを削除
-        tables = list(filter(lambda x: len(x.columns) > 5, tables))
-
-        # 抽出用テーブルの作成
-        pl_table = pd.DataFrame()
-        fc_table = pd.DataFrame()
-        qr_table = pd.DataFrame()
-        bs_table = pd.DataFrame()
-        # 必要なテーブルの抽出
-        # リストを要素ごとに for で回す書き方
-        for table in tables:
-            # 通期業績: profit and loss statement
-            if len(table.columns) == 8: 
-                if (table.columns[-2] == "１株配") & (pl_table.shape[1] == 0): 
-                    pl_table = table.copy()
-            # 業績予想: forecast
-            if len(table.columns) >= 8: 
-                if (table.columns[1] == "修正日") & (fc_table.shape[1] == 0): 
-                    fc_table = table.copy()
-            # 3ヶ月業績: quater
-            if len(table.columns) == 8: 
-                if (table.columns[-2] == "売上営業損益率") & (qr_table.shape[1] == 0): 
-                    qr_table = table.copy()
-            # 財務: balance sheet
-            if len(table.columns) == 8: 
-                if (table.columns[1] == "１株純資産") & (bs_table.shape[1] == 0): 
-                    bs_table = table.copy()
-                    
-        ## pl_table (pl_table) 通期業績
-        # 全ての列項目がnullの行を除去
-        pl_table = pl_table[~pl_table.isnull().all(axis=1)].reset_index(drop=True)
-        # 予想値と前期比の行を除去
-        pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
-        # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
-        # 会計基準表記がない場合は 'J' を代入
-        pl_table['会計基準'] = list('J' * len(pl_table))
-        for idx, end in pl_table['決算期'].iteritems():
-            if ' ' in end:
-                pl_table.loc[idx, ['会計基準', '決算期']] = end.split(' ')        
-        # 列の並び替え
-        pl_table = pl_table[['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
-        # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
-        # pl_table['決算期'] = pl_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
-        pl_table['発表日'] = pl_table.loc[pl_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
-        # pandasのTimestampへの型変換
-        pl_table['発表日'] = pd.to_datetime(pl_table['発表日'], format='%Y-%m-%d')
-        # pl_table['決算期'] = pd.to_datetime(pl_table['決算期'], format='%Y-%m-%d')
-        # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
-        num_col = ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')
-        for key in num_col:
-            if pl_table[key].dtypes == object:
-                pl_table.loc[~pl_table[key].str.replace('.', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
-                # pl_table.loc[pl_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
-        # 型変換
-        # 辞書内包表記による一括変換
-        pl_table = pl_table.astype({x: float for x in ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')})
-        # 100万円単位換算
-        million_col = ('売上高', '営業益', '経常益', '最終益')
-        pl_table.loc[:, million_col] = pl_table.loc[:, million_col].apply(lambda x: x * 1000000)
-
-        ## bs_table (tables[9?]) 財務 【実績】
-        # 全ての列項目がnullの行を除去
-        bs_table = bs_table[~bs_table.isnull().all(axis=1)].reset_index(drop=True)
-        # 決算期列の要素を会計基準と決算期に分割、それぞれの列に代入(同時に会計基準列を新規作成)
-        # 会計基準表記がない場合は 'J' を代入
-        bs_table['会計基準'] = list('J' * len(bs_table))
-        for idx, end in bs_table['決算期'].iteritems():
-            if ' ' in end:
-                bs_table.loc[idx, ['会計基準', '決算期']] = end.split(' ')
-        # 列の並び替え
-        bs_table = bs_table[['会計基準', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
-        # 決算期が 'yyyy.mm' 表記ではない行は確定決算前と思われるので削除
-        bs_table = bs_table[bs_table['決算期'].str.contains('\d\d\d\d.\d\d')].reset_index(drop=True)
-        # 決算期が 1998.mm のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
-        bs_table = bs_table[~bs_table['決算期'].str.contains('1998.\d\d')].reset_index(drop=True)
-        # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
-        # bs_table['決算期'] = bs_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
-        bs_table['発表日'] = bs_table.loc[bs_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
-        # pandasのTimestampへの型変換
-        bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
-        # bs_table['決算期'] = pd.to_datetime(bs_table['決算期'], format='%Y-%m-%d')
-        # 発表日の欠損値を通期業績の発表日に置換
-        for idx, date in bs_table['発表日'].iteritems():
-            if date != date:
-                bs_table.loc[idx, '発表日'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '発表日'].values[0]
-        # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
-        num_col = ('１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率')
-        for key in num_col:
-            if bs_table[key].dtypes == object:
-                bs_table.loc[~bs_table[key].str.replace('.', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
-                # bs_table.loc[bs_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
-        # 型変換
-        # 辞書内包表記による一括変換
-        bs_table = bs_table.astype({x: float for x in ('１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率')})
-        # 100万円単位換算
-        million_col = ('総資産', '自己資本', '剰余金')
-        bs_table.loc[:, million_col] = bs_table.loc[:, million_col].apply(lambda x: x * 1000000)
-        
-        try:
-            if len(pl_table) == len(bs_table):
-                if ((pl_table[['会計基準', '決算期']] != bs_table[['会計基準', '決算期']]).any()).any():
-                    print('{0}: Not match 会計基準 or 決算期'.format(reading_code[index]))
-                    error_table = error_table.append(pd.Series([reading_code[index], 'Not match 会計基準 or 決算期'], index=error_table.columns), ignore_index = True)
-                    # print('True {0} {1}'.format(pl_table.ix[count, '発表日']))
-                    # bs_table.ix[count, '発表日'] = pl_table.ix[count, '発表日']
-            else:
-                print('{0}: Not match table length.'.format(reading_code[index]))
-                error_table = error_table.append(pd.Series([reading_code[index], 'Not match table length.'], index=error_table.columns), ignore_index = True)
-        except Exception as e:
-            print('{0}: Failed in checking.'.format(reading_code[index]))
-            print(e)
-            error_table = error_table.append(pd.Series([reading_code[index], 'Failed in checking.'], index=error_table.columns), ignore_index = True)
-    except Exception as e:
-        # print(reading_code[index])
-        print('{0}: Failed in shaping.'.format(reading_code[index]))
-        print(e)
-        error_table = error_table.append(pd.Series([reading_code[index], 'Failed in shaping.'], index=error_table.columns), ignore_index = True)
-
-
-# In[ ]:
-
-error_table
-
-
-# In[ ]:
-
-error_table.to_csv('kabutan_error_table_2.csv')
-
-
 # # 保存した html ファイルからテーブル属性のみ読み込み、整形
 
 # In[ ]:
 
-code = 1909
+code = 3995 # 3863 # 3480 # 1418 # 1408 # 1376 # 7203 # 1909
 
 
 # In[ ]:
@@ -734,29 +663,10 @@ for table in mobile:
 # In[ ]:
 
 display(pl_table)
+display(bs_table)
 display(fc_table)
 display(qr_table)
-display(bs_table)
-
-
-# In[ ]:
-
-display(pl_mobile)
-display(fc_mobile)
-display(qr_mobile)
-display(bs_mobile)
-
-
-# In[ ]:
-
-len(pl_table) == len(pl_mobile)
-
-
-# In[ ]:
-
-for idx in range(len(mobile)):
-    print(idx)
-    display(mobile[idx])
+# display(bs_table)
 
 
 # ## pl_table (tables[3]) 通期業績
@@ -794,11 +704,20 @@ pl_mobile
 # 全ての列項目がnullの行を除去
 pl_table = pl_table[~pl_table.isnull().all(axis=1)].reset_index(drop=True)
 
-
+# モバイル版の会計基準を結合
+if len(pl_mobile) > 0:
+    pl_table['会計基準'] = pl_mobile['会計基準']
+else pl_table['会計基準'] = 
 # In[ ]:
 
 # モバイル版の会計基準を結合
 pl_table['会計基準'] = pl_mobile['会計基準']
+
+
+# In[ ]:
+
+# 後で四半期業績の決算期作成に使うので予想値行削除前に保持しておく
+pl_end = pl_table['決算期'][~pl_table['決算期'].str.contains('前期比')].apply(lambda x: x.split(' ')[-1])
 
 
 # In[ ]:
@@ -810,18 +729,13 @@ pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['�
 # In[ ]:
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
+# 後で四半期業績の決算期作成に使うのでこのテーブルでは予想値行削除前に処理する
 pl_table['決算期'] = pl_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
-pl_table['決算期変更'] = ''
+pl_table['決算期変更'] = ""
 for idx, end in pl_table['決算期'].iteritems():
     if '変' in end:
         pl_table.loc[idx, '決算期変更'] = '変更'
     pl_table.loc[idx, '決算期'] = end.split(' ')[-1]
-
-
-# In[ ]:
-
-# 列の並び替え
-pl_table = pl_table[['会計基準', '決算期変更', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
 
 
 # In[ ]:
@@ -840,7 +754,7 @@ pl_table['発表日'] = pd.to_datetime(pl_table['発表日'], format='%Y-%m-%d')
 num_col = ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')
 for key in num_col:
     if pl_table[key].dtypes == object:
-        pl_table.loc[~pl_table[key].str.replace(r'\.|\-', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
+        pl_table.loc[~pl_table[key].str.replace(r'\.|\-', "").str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
         # pl_table.loc[pl_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
 
 
@@ -855,7 +769,13 @@ pl_table = pl_table.astype({x: float for x in ('売上高', '営業益', '経常
 
 # 100万円単位換算
 million_col = ('売上高', '営業益', '経常益', '最終益')
-pl_table.loc[:, million_col] = pl_table.loc[:, million_col].apply(lambda x: x * 1000000)
+pl_table.loc[:, million_col] = pl_table.loc[:, million_col].apply(lambda x: x * 10 ** 6)
+
+
+# In[ ]:
+
+# 列の並び替え
+pl_table = pl_table[['発表日', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '会計基準', '決算期変更']]
 
 
 # In[ ]:
@@ -928,6 +848,14 @@ fc_table.columns
 
 # In[ ]:
 
+# 業績予想データが無い場合、ダミーのデータフレームを作成
+if len(fc_table.columns) < 9:
+    fc_table = pd.DataFrame("", index=[0], columns=range(14))
+
+
+# In[ ]:
+
+# 列名の変更
 fc_table.columns = ['会計基準', '決算期', '発表日', 
                                    '結合修正方向', '売上高修正方向', '営業益修正方向', '経常益修正方向', '最終益修正方向', '修正配当修正方向', 
                                    '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当',]
@@ -941,8 +869,9 @@ fc_table = fc_table.ix[fc_table.index % 2 == 0, ['会計基準', '決算期', '�
 
 # In[ ]:
 
-# モバイル版の会計基準を代入
-fc_table['会計基準'] = fc_mobile['会計基準']
+# モバイル版の会計基準を代入 (業績予想データが無い場合はスキップ)
+if len(fc_mobile) > 0:
+    fc_table['会計基準'] = fc_mobile['会計基準']
 
 
 # In[ ]:
@@ -959,6 +888,17 @@ fc_table['決算期'] = fc_table['決算期'].fillna(method='ffill')
 
 # In[ ]:
 
+# 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
+fc_table['決算期'] = fc_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
+fc_table['決算期変更'] = ""
+for idx, end in fc_table['決算期'].iteritems():
+    if '変' in end:
+        fc_table.loc[idx, '決算期変更'] = '変更'
+    fc_table.loc[idx, '決算期'] = end.split(' ')[-1]
+
+
+# In[ ]:
+
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 # fc_table['決算期'] = fc_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
 fc_table['発表日'] = fc_table.loc[fc_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
@@ -969,17 +909,17 @@ fc_table['発表日'] = pd.to_datetime(fc_table['発表日'], format='%Y-%m-%d')
 
 # In[ ]:
 
-# 修正配当の列から分割併合記号を分離
-fc_table['分割併合'] = ''
-for idx, col in fc_table['予想修正配当'].iteritems():
-    splited = re.findall(r'\d+|\D+', col)
-    if len(splited) > 1:
-        if splited[1] == '*':
-            splited[1] = '分割併合実施'
-        elif splited[1] == '#':
-            splited[1] = '当期実施予定'
-        fc_table.loc[idx, ['予想修正配当', '分割併合']] = splited
-fc_table = fc_table[['会計基準', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当', '分割併合', '発表日']]
+# 修正配当の列から分割併合記号を分離 (修正配当の予想値は入っていない銘柄もある)
+fc_table['分割併合'] = ""
+if fc_table['予想修正配当'].dtypes == object:
+    for idx, col in fc_table['予想修正配当'].iteritems():
+        splited = re.findall(r'[\d.]+|\D+', col)
+        if len(splited) > 1:
+            if splited[1] == '*':
+                splited[1] = '分割併合実施'
+            elif splited[1] == '#':
+                splited[1] = '当期実施予定'
+            fc_table.loc[idx, ['予想修正配当', '分割併合']] = splited
 
 
 # In[ ]:
@@ -988,7 +928,7 @@ fc_table = fc_table[['会計基準', '決算期', '予想売上高', '予想営�
 num_col = ('予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当')
 for key in num_col:
     if fc_table[key].dtypes == object:
-        fc_table.loc[~fc_table[key].str.replace(r'\.|\-', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
+        fc_table.loc[~fc_table[key].str.replace(r'\.|\-', "").str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
         # fc_table.loc[fc_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
 
 
@@ -1003,7 +943,13 @@ fc_table = fc_table.astype({x: float for x in ('予想売上高', '予想営業�
 
 # 100万円単位換算
 million_col = ('予想売上高', '予想営業益', '予想経常益', '予想最終益')
-fc_table.loc[:, million_col] = fc_table.loc[:, million_col].apply(lambda x: x * 1000000)
+fc_table.loc[:, million_col] = fc_table.loc[:, million_col].apply(lambda x: x * 10 ** 6)
+
+
+# In[ ]:
+
+# 列の並び替え
+fc_table = fc_table[['発表日', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当', '分割併合', '会計基準', '決算期変更']]
 
 
 # In[ ]:
@@ -1079,7 +1025,7 @@ qr_table = qr_table[~((qr_table['決算期'].str.contains('予')) | (qr_table['�
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 qr_table['決算期'] = qr_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
-qr_table['決算期変更'] = ''
+qr_table['決算期変更'] = ""
 for idx, end in qr_table['決算期'].iteritems():
     if '変' in end:
         qr_table.loc[idx, '決算期変更'] = '変更'
@@ -1088,14 +1034,8 @@ for idx, end in qr_table['決算期'].iteritems():
 
 # In[ ]:
 
-# 列の並び替え
-qr_table = qr_table[['会計基準', '決算期変更', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '売上営業損益率', '発表日']]
-
-
-# In[ ]:
-
 # 列名の変更
-qr_table.columns = ['会計基準', '決算期変更', 'Q期首', 'Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率', '発表日']
+qr_table.columns = ['Q期首', 'Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率', '発表日', '会計基準', '決算期変更']
 
 
 # In[ ]:
@@ -1111,11 +1051,22 @@ qr_table['発表日'] = pd.to_datetime(qr_table['発表日'], format='%Y-%m-%d')
 
 # In[ ]:
 
+# 通期業績の決算期を参照して決算期列を追加
+# 通期業績の予想値削除前に別名でキープした決算期シリーズを利用
+for start_idx, start in qr_table['Q期首'].iteritems():
+    for end in pl_end:
+        if start < pd.to_datetime(end, format='%Y.%m') + offsets.MonthEnd():
+            qr_table.loc[start_idx, '決算期'] = end
+            break
+
+
+# In[ ]:
+
 # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
 num_col = ('Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率')
 for key in num_col:
     if qr_table[key].dtypes == object:
-        qr_table.loc[~qr_table[key].str.replace(r'\.|\-', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
+        qr_table.loc[~qr_table[key].str.replace(r'\.|\-', "").str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
         # qr_table.loc[qr_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
 
 
@@ -1130,7 +1081,13 @@ qr_table = qr_table.astype({x: float for x in ('Q売上高', 'Q営業益', 'Q経
 
 # 100万円単位換算
 million_col = ('Q売上高', 'Q営業益', 'Q経常益', 'Q最終益')
-qr_table.loc[:, million_col] = qr_table.loc[:, million_col].apply(lambda x: x * 1000000)
+qr_table.loc[:, million_col] = qr_table.loc[:, million_col].apply(lambda x: x * 10 ** 6)
+
+
+# In[ ]:
+
+# 列の並び替え
+qr_table = qr_table[['発表日', '決算期', 'Q期首', 'Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率', '会計基準', '決算期変更']]
 
 
 # In[ ]:
@@ -1223,11 +1180,6 @@ for idx, table in enumerate(tables):
 
 # In[ ]:
 
-pl_table
-
-
-# In[ ]:
-
 bs_table
 
 
@@ -1263,17 +1215,11 @@ pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['�
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 bs_table['決算期'] = bs_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
-bs_table['決算期変更'] = ''
+bs_table['決算期変更'] = ""
 for idx, end in bs_table['決算期'].iteritems():
     if '変' in end:
         bs_table.loc[idx, '決算期変更'] = '変更'
     bs_table.loc[idx, '決算期'] = end.split(' ')[-1]
-
-
-# In[ ]:
-
-# 列の並び替え
-bs_table = bs_table[['会計基準', '決算期変更', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '発表日']]
 
 
 # In[ ]:
@@ -1285,7 +1231,15 @@ bs_table = bs_table[bs_table['決算期'].str.contains('\d\d\d\d.\d\d')].reset_i
 # In[ ]:
 
 # 決算期が 1998.mm のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
-bs_table = bs_table[~bs_table['決算期'].str.contains('1998.\d\d')].reset_index(drop=True)
+# bs_table = bs_table[~bs_table['決算期'].str.contains('1998.\d\d')].reset_index(drop=True)
+
+
+# In[ ]:
+
+# 通期業績には無い期間の行を削除
+for idx, end in bs_table['決算期'].iteritems():
+    if not end in pl_table['決算期'].values:
+        bs_table = bs_table.drop(idx)
 
 
 # In[ ]:
@@ -1300,11 +1254,6 @@ bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
 
 # In[ ]:
 
-# TODO 決算期の同じ年の月が通期業績と異なる場合、通期業績に揃える
-
-
-# In[ ]:
-
 # 決算期の同じ年の月が通期業績と異なる場合があるので、通期業績の決算期に置換
 # 決算期の変更があり、なおかつ決算期に「変」記載のない銘柄で確認 (1909)
 for idx, end in bs_table['決算期'].iteritems():
@@ -1313,10 +1262,18 @@ for idx, end in bs_table['決算期'].iteritems():
 
 # In[ ]:
 
-# 発表日の欠損値を通期業績の発表日に置換
+# 発表日の欠損値および異常値を通期業績の発表日に置換
 for idx, date in bs_table['発表日'].iteritems():
-    if date != date:
+    if (date != date) or (date <= pd.to_datetime('2001-01-01')):
         bs_table.loc[idx, '発表日'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '発表日'].values[0]
+
+
+# In[ ]:
+
+# 決算期変更の欠損値を通期業績の値に置換
+for idx, change in bs_table['決算期変更'].iteritems():
+    if change == "":
+        bs_table.loc[idx, '決算期変更'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '決算期変更'].values[0]
 
 
 # In[ ]:
@@ -1325,7 +1282,7 @@ for idx, date in bs_table['発表日'].iteritems():
 num_col = ('１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率')
 for key in num_col:
     if bs_table[key].dtypes == object:
-        bs_table.loc[~bs_table[key].str.replace(r'\.|\-', '').str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
+        bs_table.loc[~bs_table[key].str.replace(r'\.|\-', "").str.isnumeric(), key] = np.nan # .str を2回も使わないといけないのはなんだか。。。
         # bs_table.loc[bs_table[key].str.contains('－'), key] = np.nan # この書き方だと '－'  以外の文字列に対応できないので不安
 
 
@@ -1340,7 +1297,13 @@ bs_table = bs_table.astype({x: float for x in ('１株純資産', '自己資本�
 
 # 100万円単位換算
 million_col = ('総資産', '自己資本', '剰余金')
-bs_table.loc[:, million_col] = bs_table.loc[:, million_col].apply(lambda x: x * 1000000)
+bs_table.loc[:, million_col] = bs_table.loc[:, million_col].apply(lambda x: x * 10 ** 6)
+
+
+# In[ ]:
+
+# 列の並び替え
+bs_table = bs_table[['発表日', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '会計基準', '決算期変更']]
 
 
 # In[ ]:
