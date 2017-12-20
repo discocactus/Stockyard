@@ -579,7 +579,7 @@ for table_number in range(len(tables)):
 
 # In[ ]:
 
-code = 3995 # 3863 # 3480 # 1418 # 1408 # 1376 # 7203 # 1909
+code = 7196 # 3995 # 3975 # 3863 # 3480 # 1418 # 1408 # 1376 # 7203 # 1909
 
 
 # In[ ]:
@@ -641,7 +641,7 @@ bs_mobile = pd.DataFrame()
 
 # 必要なテーブルの抽出
 # リストを要素ごとに for で回す書き方
-for table in mobile:
+for idx, table in enumerate(mobile):
     # 通期業績: profit and loss statement
     if len(table.columns) == 8: 
         if (table.columns[-3] == "１株配") & (pl_mobile.shape[1] == 0): 
@@ -658,6 +658,7 @@ for table in mobile:
     if len(table.columns) == 8: 
         if (table.columns[0] == "１株純資産") & (bs_mobile.shape[1] == 0): 
             bs_mobile = table.copy()
+            bs_mobile_idx = idx
 
 
 # In[ ]:
@@ -704,14 +705,14 @@ pl_mobile
 # 全ての列項目がnullの行を除去
 pl_table = pl_table[~pl_table.isnull().all(axis=1)].reset_index(drop=True)
 
-# モバイル版の会計基準を結合
-if len(pl_mobile) > 0:
-    pl_table['会計基準'] = pl_mobile['会計基準']
-else pl_table['会計基準'] = 
+
 # In[ ]:
 
-# モバイル版の会計基準を結合
-pl_table['会計基準'] = pl_mobile['会計基準']
+# モバイル版の会計基準を結合、無い場合は空の列を作成
+if len(pl_mobile) > 0:
+    pl_table['会計基準'] = pl_mobile['会計基準']
+else:
+    pl_table['会計基準'] = ""
 
 
 # In[ ]:
@@ -869,9 +870,11 @@ fc_table = fc_table.ix[fc_table.index % 2 == 0, ['会計基準', '決算期', '�
 
 # In[ ]:
 
-# モバイル版の会計基準を代入 (業績予想データが無い場合はスキップ)
+# モバイル版の会計基準を代入、無い場合は空値を代入
 if len(fc_mobile) > 0:
     fc_table['会計基準'] = fc_mobile['会計基準']
+else:
+    fc_table['会計基準'] = ""
 
 
 # In[ ]:
@@ -1195,20 +1198,34 @@ bs_table.columns
 
 # In[ ]:
 
+# 財務実績データが無い場合、ダミーのデータフレームを作成
+if len(bs_table) == 0:
+    bs_table = pd.DataFrame(index=[0], columns=range(9))
+    # 列名の変更
+    bs_table.columns = ['発表日', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '会計基準']
+
+
+# In[ ]:
+
 # 全ての列項目がnullの行を除去
 bs_table = bs_table[~bs_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
 
-# モバイル版の会計基準を結合
-bs_table['会計基準'] = bs_mobile['会計基準']
+# モバイル版のデータを結合、無い場合はスキップ
+if (len(bs_table) == 0) & (len(bs_mobile) > 0):
+    bs_table = pd.merge(bs_table, bs_mobile, how='outer')
+    bs_table['決算期'] = mobile[bs_mobile_idx - 1]['決算期']
+elif len(bs_mobile) > 0:
+    bs_table['会計基準'] = bs_mobile['会計基準']
 
 
 # In[ ]:
 
 # 予想値と前期比の行を除去
-pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
+bs_table['決算期'] = bs_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
+bs_table = bs_table[~((bs_table['決算期'].str.contains('予')) | (bs_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
 
 # In[ ]:
@@ -1237,16 +1254,20 @@ bs_table = bs_table[bs_table['決算期'].str.contains('\d\d\d\d.\d\d')].reset_i
 # In[ ]:
 
 # 通期業績には無い期間の行を削除
-for idx, end in bs_table['決算期'].iteritems():
-    if not end in pl_table['決算期'].values:
-        bs_table = bs_table.drop(idx)
+if len(pl_table) > 0:
+    for idx, end in bs_table['決算期'].iteritems():
+        if not end in pl_table['決算期'].values:
+            bs_table = bs_table.drop(idx)
 
 
 # In[ ]:
 
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 # bs_table['決算期'] = bs_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
-bs_table['発表日'] = bs_table.loc[bs_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
+try:
+    bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
+except:
+    bs_table['発表日'] = bs_table.loc[bs_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 # pandasのTimestampへの型変換
 bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
 # bs_table['決算期'] = pd.to_datetime(bs_table['決算期'], format='%Y-%m-%d')
@@ -1256,24 +1277,27 @@ bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
 
 # 決算期の同じ年の月が通期業績と異なる場合があるので、通期業績の決算期に置換
 # 決算期の変更があり、なおかつ決算期に「変」記載のない銘柄で確認 (1909)
-for idx, end in bs_table['決算期'].iteritems():
-    bs_table.loc[idx, '決算期'] = pl_table.loc[pl_table['決算期'].apply(lambda x: x[:4]) == bs_table.loc[idx, '決算期'][:4], '決算期'].values[0]
+if len(pl_table) > 0:
+    for idx, end in bs_table['決算期'].iteritems():
+        bs_table.loc[idx, '決算期'] = pl_table.loc[pl_table['決算期'].apply(lambda x: x[:4]) == bs_table.loc[idx, '決算期'][:4], '決算期'].values[0]
 
 
 # In[ ]:
 
 # 発表日の欠損値および異常値を通期業績の発表日に置換
-for idx, date in bs_table['発表日'].iteritems():
-    if (date != date) or (date <= pd.to_datetime('2001-01-01')):
-        bs_table.loc[idx, '発表日'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '発表日'].values[0]
+if len(pl_table) > 0:
+    for idx, date in bs_table['発表日'].iteritems():
+        if (date != date) or (date <= pd.to_datetime('2001-01-01')):
+            bs_table.loc[idx, '発表日'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '発表日'].values[0]
 
 
 # In[ ]:
 
 # 決算期変更の欠損値を通期業績の値に置換
-for idx, change in bs_table['決算期変更'].iteritems():
-    if change == "":
-        bs_table.loc[idx, '決算期変更'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '決算期変更'].values[0]
+if len(pl_table) > 0:
+    for idx, change in bs_table['決算期変更'].iteritems():
+        if change == "":
+            bs_table.loc[idx, '決算期変更'] = pl_table.loc[pl_table['決算期'] == bs_table.loc[idx, '決算期'], '決算期変更'].values[0]
 
 
 # In[ ]:
@@ -1318,7 +1342,7 @@ bs_table
 
 # In[ ]:
 
-pl_table
+bs_table
 
 
 # In[ ]:

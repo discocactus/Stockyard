@@ -418,7 +418,7 @@ for index_num, code in enumerate(reading_code):
             # モバイル版の会計基準を結合
             bs_table['会計基準'] = bs_mobile['会計基準']
             # 予想値と前期比の行を除去
-            pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
+            bs_table = bs_table[~((bs_table['決算期'].str.contains('予')) | (bs_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
             # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
             bs_table['決算期'] = bs_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
             bs_table['決算期変更'] = ""
@@ -434,7 +434,7 @@ for index_num, code in enumerate(reading_code):
             for idx, end in bs_table['決算期'].iteritems():
                 if not end in pl_table['決算期'].values:
                     bs_table = bs_table.drop(idx)
-                        # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
+            # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
             bs_table['発表日'] = bs_table.loc[bs_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
             # pandasのTimestampへの型変換
             bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
@@ -528,6 +528,11 @@ failed
 # In[ ]:
 
 pd.Series(failed).to_csv('/Users/Really/Stockyard/_csv/kabutan_merge_failed.csv')
+
+
+# In[ ]:
+
+failed = pd.read_csv('/Users/Really/Stockyard/_csv/kabutan_merge_failed.csv', header=None, index_col=0)
 
 
 # In[ ]:
