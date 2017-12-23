@@ -20,7 +20,8 @@ from sqlalchemy.types import Date, Integer, Float, Text
 class sql:
     db_settings = {
         "host": 'localhost',
-        "database": 'StockPrice_Yahoo_1',
+        # "database": 'StockPrice_Yahoo_1',
+        "database": 'stockyard',
         "user": 'user',
         "password": 'password',
         "port":'3306'

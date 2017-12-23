@@ -183,8 +183,8 @@ len(code_list)
 
 # In[ ]:
 
-start_index = 0
-increase_number = 20
+start_index = 2500
+increase_number = 5
 end_index = start_index + increase_number
 #end_index = len(code_list)
 

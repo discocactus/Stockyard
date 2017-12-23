@@ -46,7 +46,8 @@ help(sql)
 
 db_settings = {
     "host": 'localhost',
-    "database": 'StockPrice_Yahoo_1',
+    # "database": 'StockPrice_Yahoo_1',
+    "database": 'stockyard',
     "user": 'user',
     "password": 'password',
     "port":'3306'
@@ -61,6 +62,7 @@ engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.form
 # mysql>
 CREATE DATABASE StockPrice_Yahoo_1 DEFAULT CHARACTER SET utf8mb4;
 GRANT ALL ON StockPrice_Yahoo_1.* TO user@localhost IDENTIFIED BY 'password';
+GRANT ALL ON stockyard.* TO user@localhost IDENTIFIED BY 'password';
 show databases;
 use StockPrice_Yahoo_1;
 show tables;
