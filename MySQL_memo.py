@@ -118,7 +118,28 @@ engine.url.get_driver_name()
 # In[ ]:
 
 
-pd.read_sql_query("select*from t_1301", engine, index_col='Date')
+df = pd.read_sql_query("select*from t_1301", engine, index_col=None)
+df = df.set_index('Date')
+df.index = pd.to_datetime(df.index)
+df
+
+
+# In[ ]:
+
+
+df.index.values
+
+
+# In[ ]:
+
+
+type(df.index[0])
+
+
+# In[ ]:
+
+
+df.loc['2000-01-04']
 
 
 # In[ ]:
@@ -321,6 +342,120 @@ sql.read_table('test_table', 'index')
 
 
 # # 処理遅延の原因究明のための各種動作確認
+
+# In[ ]:
+
+
+df = sql.get_price(1301)
+
+
+# In[ ]:
+
+
+df
+
+
+# In[ ]:
+
+
+df.dtypes
+
+
+# In[ ]:
+
+
+type(df.index[0])
+
+
+# In[ ]:
+
+
+df.loc['2000-01-04']
+
+
+# In[ ]:
+
+
+df = pd.read_sql('select*from t_1301', engine)
+df['Date'] = pd.to_datetime(df['Date'])#.dt.strftime("%Y-%m-%d")
+df
+
+
+# In[ ]:
+
+
+df.dtypes
+
+
+# In[ ]:
+
+
+type(df['Date'][0])
+
+
+# In[ ]:
+
+
+ds = df.loc[0]
+ds
+
+
+# In[ ]:
+
+
+dd = list(dict(df.iloc[0]))
+dd
+
+
+# In[ ]:
+
+
+dl = df.to_dict('records')
+dl
+
+
+# In[ ]:
+
+
+import MySQLdb
+
+conn = MySQLdb.connect(db='stockyard', user='user', passwd='password', charset='utf8mb4')
+
+c = conn.cursor()
+c.execute('DROP TABLE IF EXISTS t_1002')
+c.execute('''
+    CREATE TABLE t_1002 (
+        Date date,
+        Open integer,
+        High integer,
+        Low integer,
+        Close integer,
+        Volume integer,
+        AdjClose double
+    )
+''')
+
+c.executemany('INSERT INTO t_1002 VALUES '
+              '(%(Date)s, %(Open)s, %(High)s, %(Low)s, %(Close)s, %(Volume)s, %(AdjClose)s)', dl)
+
+conn.commit()
+
+
+# In[ ]:
+
+
+c.execute('SELECT * FROM t_1002')
+for row in c.fetchall():
+    print(row)
+    
+conn.close()
+
+
+# In[ ]:
+
+
+sql.get_price(1002)
+
 
 # In[ ]:
 

@@ -60,6 +60,7 @@ class sql:
         # result = pd.read_sql_table(table_name, sql.engine, index_col='Date')#.drop('index', axis=1)
         sql_query = 'SELECT * FROM t_{0}'.format(code)
         result = pd.read_sql(sql_query, sql.engine, index_col='Date')
+        result.index = pd.to_datetime(result.index)
         
         return result
     
