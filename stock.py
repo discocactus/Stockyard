@@ -19,15 +19,22 @@ from sqlalchemy.types import Date, Integer, Float, Text
 
 class sql:
     db_settings = {
-        "host": 'localhost',
+        "db": 'mysql', # ドライバーは mysqldb になる。mysqlclient のこと？
+        # "db": 'mysql+mysqlconnector',
+        # "db": 'mysql+pymysql',
+        # "host": 'localhost',
+        "host": '127.0.0.1',
+        # "host": 'MyCon',
         # "database": 'StockPrice_Yahoo_1',
         "database": 'stockyard',
         "user": 'user',
         "password": 'password',
-        "port":'3306'
+        "port": '3306',
+        "charset": '?charset=utf8mb4'
     }
-    engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
-
+    # engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}{charset}'.format(**db_settings))
+    
     
     def write_price(self, code, price):
         table_name = 't_{0}'.format(code)
@@ -49,8 +56,10 @@ class sql:
         
 
     def get_price(self, code):
-        table_name = 't_{0}'.format(code)
-        result = pd.read_sql_table(table_name, sql.engine, index_col='Date')#.drop('index', axis=1)
+        # table_name = 't_{0}'.format(code)
+        # result = pd.read_sql_table(table_name, sql.engine, index_col='Date')#.drop('index', axis=1)
+        sql_query = 'SELECT * FROM t_{0}'.format(code)
+        result = pd.read_sql(sql_query, sql.engine, index_col='Date')
         
         return result
     
@@ -67,14 +76,27 @@ class sql:
         
         
     def get_info(self, table_name):
-        result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        # result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        sql_query = 'SELECT * FROM {0}'.format(table_name)
+        result = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
+        result['Date'] = pd.to_datetime(result['Date'])
+        
+        return result
+    
+    
+    def get_yahoo_info(self):
+        # result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        sql_query = 'SELECT * FROM yahoo_info'
+        result = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
         result['Date'] = pd.to_datetime(result['Date'])
         
         return result
         
 
     def get_yahoo_stock_code(self, start_index=0, end_index=None):
-        yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        # yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        sql_query = 'SELECT * FROM yahoo_stock_table'
+        yahoo_stock_table = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
         
         if end_index == None:
             end_index = len(yahoo_stock_table)
@@ -85,7 +107,9 @@ class sql:
 
 
     def get_new_added_stock_code(self, start_index=0, end_index=None):
-        new_added_stock_table = pd.read_sql_table('new_added_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        # new_added_stock_table = pd.read_sql_table('new_added_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        sql_query = 'SELECT * FROM new_added_stock_table'
+        new_added_stock_table = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
         
         if end_index == None:
             end_index = len(new_added_stock_table)
@@ -95,8 +119,8 @@ class sql:
         return result
 
 
-    def statement_query(self, statement):
-        result = pd.read_sql_query(statement, sql.engine, index_col=None)
+    def statement_query(self, sql_query):
+        result = pd.read_sql_query(sql_query, sql.engine, index_col=None)
         # ex. df = sql.statement_query('SELECT code, name FROM domestic_stock_table')
         # テーブル全体ではなく抽出の場合、インデックスは無いらしく下記ではエラーになる
         #result = pd.read_sql_query(statement, sql.engine, index_col=None).drop('index', axis=1)
@@ -108,8 +132,10 @@ class sql:
         table.to_sql(table_name, sql.engine, if_exists='replace')
         
     
-    def read_table(self, table_name):
-        result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+    def read_table(self, table_name, index_col=None):
+        # result = pd.read_sql_table(table_name, sql.engine, index_col=index_col)
+        sql_query = 'SELECT * FROM {0}'.format(table_name)
+        result = pd.read_sql(sql_query, sql.engine, index_col=index_col)
         
         return result
     

@@ -10,9 +10,15 @@
 
 /_yahoo_csv/*
 
-.ipynb_checkpoints/*
+/.ipynb_checkpoints/*
 
-__pycache__/*
+/__pycache__/*
+
+/_ahaha_stock/*
+
+/_ahaha_151130/*
+
+/_nemusake_141031/*
 
 .DS_Store
 *.log

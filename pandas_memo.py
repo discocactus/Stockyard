@@ -9,6 +9,7 @@
 
 # In[ ]:
 
+
 import numpy as np
 import pandas as pd
 import pandas.tseries.offsets as offsets
@@ -25,6 +26,7 @@ import stock
 
 # In[ ]:
 
+
 # Jupyterの最期の評価値(pd.DataFrame)と同じように表を出力させたい時
 # 複数のデータフレームで構成されるリストを for 文ですべて表示したい時など
 from IPython.display import display, HTML
@@ -33,10 +35,12 @@ from IPython.display import display, HTML
 
 # In[ ]:
 
+
 importlib.reload(stock)
 
 
 # In[ ]:
+
 
 # pandas の最大表示列数を設定 (max_rows で表示行数の設定も可能)
 pd.set_option('display.max_columns', 30)
@@ -49,6 +53,7 @@ pd.set_option('display.max_columns', 30)
 
 # In[ ]:
 
+
 df = tables[11]
 
 
@@ -56,6 +61,7 @@ df = tables[11]
 # 独立したコピーを作りたい場合は.copy()メソッドで
 
 # In[ ]:
+
 
 df = tables[11].copy()
 
@@ -69,12 +75,14 @@ df = tables[11].copy()
 
 # In[ ]:
 
+
 df = pd.DataFrame(np.arange(12).reshape((3,4)),
                  index=list('xyz'),
                  columns=list('abcd'))
 
 
 # In[ ]:
+
 
 df
 
@@ -83,11 +91,13 @@ df
 
 # In[ ]:
 
+
 # y行 b列
 df.at['y', 'b']
 
 
 # In[ ]:
+
 
 # y行 b列
 df.loc['y', 'b']
@@ -95,11 +105,13 @@ df.loc['y', 'b']
 
 # In[ ]:
 
+
 # x〜y行 b列
 df.loc['x':'y', 'b']
 
 
 # In[ ]:
+
 
 # 最初からy行 全列
 df.loc[:'y', :]
@@ -107,11 +119,13 @@ df.loc[:'y', :]
 
 # In[ ]:
 
+
 # 0行 1列の値 (1行目、2列目)
 df.iat[0, 1]
 
 
 # In[ ]:
+
 
 # 1行 1列の値 (2行目、2列目)
 df.iloc[1, 1]
@@ -119,11 +133,13 @@ df.iloc[1, 1]
 
 # In[ ]:
 
+
 # 0〜1行 最後の2列の値
 df.iloc[0:2, -2:]
 
 
 # In[ ]:
+
 
 # 0行 全列
 df.iloc[:1, :]
@@ -131,11 +147,13 @@ df.iloc[:1, :]
 
 # In[ ]:
 
+
 # x行 a, d列の値 (結果はシリーズ)
 df.ix['x', ['a', 'd']]
 
 
 # In[ ]:
+
 
 # x行を取り出し (結果はシリーズ)
 df.ix['x']
@@ -143,17 +161,20 @@ df.ix['x']
 
 # In[ ]:
 
+
 # x行 a列
 df.ix['x']['a']
 
 
 # In[ ]:
 
+
 # a列を取り出し (結果はシリーズ)
 df.ix[:, 'a']
 
 
 # In[ ]:
+
 
 # d列の値が6より大の行の最初の2列
 df.ix[df.d > 6, :2]
@@ -163,11 +184,13 @@ df.ix[df.d > 6, :2]
 
 # In[ ]:
 
+
 # 列ラベル a (結果はシリーズ)
 df['a']
 
 
 # In[ ]:
+
 
 # 列ラベル a,c
 df[['a', 'c']]
@@ -175,11 +198,13 @@ df[['a', 'c']]
 
 # In[ ]:
 
+
 # 0〜1行
 df[:2]
 
 
 # In[ ]:
+
 
 # d列の値が6より大の行
 df[df['d'] > 6]
@@ -191,6 +216,7 @@ df[df['d'] > 6]
 # ## サンプルデータの準備
 
 # In[ ]:
+
 
 import pandas as pd
 
@@ -204,10 +230,12 @@ df = pd.DataFrame({'C1': [11, 21, 31],
 
 # In[ ]:
 
+
 s
 
 
 # In[ ]:
+
 
 df
 
@@ -218,20 +246,24 @@ df
 
 # In[ ]:
 
+
 s[0]
 
 
 # In[ ]:
+
 
 s['I1']
 
 
 # In[ ]:
 
+
 df['C1']
 
 
 # In[ ]:
+
 
 # 番号を数値として渡すとNG!
 df[1]
@@ -239,11 +271,13 @@ df[1]
 
 # In[ ]:
 
+
 # 番号のリストならOK (リストだと columns からの選択)
 df[[1]] 
 
 
 # In[ ]:
+
 
 # 番号のスライスもOK (スライスだと index からの選択)
 df[1:2]
@@ -251,27 +285,32 @@ df[1:2]
 
 # In[ ]:
 
+
 # NG!
 df['I1']
 
 
 # In[ ]:
 
+
 s[[True, False, True]]
 
 
 # In[ ]:
+
 
 df[[True, False, True]] # (index を指定したことになる)
 
 
 # In[ ]:
 
+
 # bool の DataFrame を作る
 df > 21
 
 
 # In[ ]:
+
 
 # bool の DataFrame で選択
 df[df > 21] 
@@ -284,11 +323,13 @@ df[df > 21]
 
 # In[ ]:
 
+
 # 返り値は 値
 s['I1']
 
 
 # In[ ]:
+
 
 # 返り値は Series
 s[['I1']]
@@ -296,11 +337,13 @@ s[['I1']]
 
 # In[ ]:
 
+
 # 返り値は Series
 df['C1']
 
 
 # In[ ]:
+
 
 # 返り値は DataFrame
 df[['C1']]
@@ -324,16 +367,19 @@ df[['C1']]
 
 # In[ ]:
 
+
 # 名前による指定
 s.ix['I2']
 
 
 # In[ ]:
 
+
 df.ix['I2', 'C2']
 
 
 # In[ ]:
+
 
 # 順序による指定
 s.ix[1]
@@ -341,10 +387,12 @@ s.ix[1]
 
 # In[ ]:
 
+
 df.ix[1, 1]
 
 
 # In[ ]:
+
 
 # 名前のリストによる指定
 s.ix[['I1', 'I3']]
@@ -352,10 +400,12 @@ s.ix[['I1', 'I3']]
 
 # In[ ]:
 
+
 df.ix[['I1', 'I3'], ['C1', 'C3']]
 
 
 # In[ ]:
+
 
 # bool のリストによる指定
 s.ix[[True, False, True]]
@@ -363,10 +413,12 @@ s.ix[[True, False, True]]
 
 # In[ ]:
 
+
 df.ix[[True, False, True], [True, False, True]]
 
 
 # In[ ]:
+
 
 # 第一引数, 第二引数で別々の形式を使うこともできる
 df.ix[1:, "C1"]
@@ -378,6 +430,7 @@ df.ix[1:, "C1"]
 
 # In[ ]:
 
+
 df.ix[1]
 
 
@@ -386,10 +439,12 @@ df.ix[1]
 
 # In[ ]:
 
+
 df.ix[, 'C3']
 
 
 # In[ ]:
+
 
 df.ix[:, 'C3']
 
@@ -401,17 +456,20 @@ df.ix[:, 'C3']
 
 # In[ ]:
 
+
 # 返り値は 値
 df.ix[1, 1]
 
 
 # In[ ]:
 
+
 # 返り値は Series
 df.ix[[1], 1]
 
 
 # In[ ]:
+
 
 # 返り値は DataFrame
 df.ix[[1], [1]]
@@ -459,15 +517,18 @@ df.ix[[1], [1]]
 
 # In[ ]:
 
+
 df.columns == 'C3'
 
 
 # In[ ]:
 
+
 df.columns.isin(['C1', 'C2'])
 
 
 # In[ ]:
+
 
 (df.columns == 'C3') | (df.columns == 'C2')
 
@@ -475,6 +536,7 @@ df.columns.isin(['C1', 'C2'])
 # そのため、上記のような条件式をそのまま行列選択時の引数として使うことができる。
 
 # In[ ]:
+
 
 df.ix[df.index.isin(['I1', 'I2']), df.columns == 'C3']
 
@@ -485,6 +547,7 @@ df.ix[df.index.isin(['I1', 'I2']), df.columns == 'C3']
 # ## サンプルデータの準備
 
 # In[ ]:
+
 
 df = pd.DataFrame({'N1': [1, 2, 3, 4, 5, 6],
                    'N2': [10, 20, 30, 40, 50, 60],
@@ -500,6 +563,7 @@ df = pd.DataFrame({'N1': [1, 2, 3, 4, 5, 6],
 
 # In[ ]:
 
+
 df
 
 
@@ -513,10 +577,12 @@ df
 
 # In[ ]:
 
+
 df.index
 
 
 # In[ ]:
+
 
 df.columns
 
@@ -527,10 +593,12 @@ df.columns
 
 # In[ ]:
 
+
 df.columns.map(lambda x: x.startswith('N'))
 
 
 # In[ ]:
+
 
 df.ix[:, df.columns.map(lambda x: x.startswith('N'))]
 
@@ -540,6 +608,7 @@ df.ix[:, df.columns.map(lambda x: x.startswith('N'))]
 # ### .str アクセサを使用した文字列処理関数による同様の選択
 
 # In[ ]:
+
 
 df.ix[:, df.columns.str.startswith('N')]
 
@@ -554,10 +623,12 @@ df.ix[:, df.columns.str.startswith('N')]
 
 # In[ ]:
 
+
 df[['N1', 'N2', 'N4']]
 
 
 # In[ ]:
+
 
 df.ix[:, ['N1', 'N2', 'N4']]
 
@@ -566,10 +637,12 @@ df.ix[:, ['N1', 'N2', 'N4']]
 
 # In[ ]:
 
+
 df.columns.isin(['N1', 'N2', 'N4'])
 
 
 # In[ ]:
+
 
 df.ix[:, df.columns.isin(['N1', 'N2', 'N4'])]
 
@@ -582,15 +655,18 @@ df.ix[:, df.columns.isin(['N1', 'N2', 'N4'])]
 
 # In[ ]:
 
+
 df.columns.sort_values()
 
 
 # In[ ]:
 
+
 df.columns.sort_values()[:3]
 
 
 # In[ ]:
+
 
 df[df.columns.sort_values()[:3]]
 
@@ -605,15 +681,18 @@ df[df.columns.sort_values()[:3]]
 
 # In[ ]:
 
+
 df.index.year
 
 
 # In[ ]:
 
+
 df.index.year == 2015
 
 
 # In[ ]:
+
 
 df[df.index.year == 2015]
 
@@ -627,6 +706,7 @@ df[df.index.year == 2015]
 # そのため、同じ処理は以下のようにも書ける。
 
 # In[ ]:
+
 
 df['2015']
 
@@ -642,15 +722,18 @@ df['2015']
 
 # In[ ]:
 
+
 df.dtypes
 
 
 # In[ ]:
 
+
 df.dtypes == np.float64
 
 
 # In[ ]:
+
 
 df.ix[:, df.dtypes == np.float64]
 
@@ -662,10 +745,12 @@ df.ix[:, df.dtypes == np.float64]
 
 # In[ ]:
 
+
 df['N1'] % 2 == 0
 
 
 # In[ ]:
+
 
 df[df['N1'] % 2 == 0]
 
@@ -674,10 +759,12 @@ df[df['N1'] % 2 == 0]
 
 # In[ ]:
 
+
 df.sum()
 
 
 # In[ ]:
+
 
 indexer = df.sum() > 50
 indexer
@@ -685,10 +772,12 @@ indexer
 
 # In[ ]:
 
+
 indexer.index[indexer]
 
 
 # In[ ]:
+
 
 df[indexer.index[indexer]]
 
@@ -704,15 +793,18 @@ df[indexer.index[indexer]]
 
 # In[ ]:
 
+
 df.apply(lambda x: x['N1'] * x['N2'], axis=1)
 
 
 # In[ ]:
 
+
 df.apply(lambda x: x['N1'] * x['N2'], axis=1) > 100
 
 
 # In[ ]:
+
 
 df[df.apply(lambda x: x['N1'] * x['N2'], axis=1) > 100]
 
@@ -720,6 +812,7 @@ df[df.apply(lambda x: x['N1'] * x['N2'], axis=1) > 100]
 # __補足)__ 上ではあえて apply を使ったが、各列同士は直接 要素の積をとれるため別に apply が必須ではない。
 
 # In[ ]:
+
 
 df[df['N1'] * df['N2'] > 100] 
 
@@ -731,10 +824,12 @@ df[df['N1'] * df['N2'] > 100]
 
 # In[ ]:
 
+
 df['S1'].isin(['A', 'D'])
 
 
 # In[ ]:
+
 
 df[df['S1'].isin(['A', 'D'])]
 
@@ -747,6 +842,7 @@ df[df['S1'].isin(['A', 'D'])]
 # "N2" カラムの値が大きいものを 上から順に 3行分 取得するには、ソートして 行番号でスライスすればよい。
 
 # In[ ]:
+
 
 df.sort_values('N2', ascending=False)[:3]
 
@@ -761,20 +857,24 @@ df.sort_values('N2', ascending=False)[:3]
 
 # In[ ]:
 
+
 df['D1']
 
 
 # In[ ]:
+
 
 df['D1'].dt.day
 
 
 # In[ ]:
 
+
 df['D1'].dt.day.isin([2, 3, 5])
 
 
 # In[ ]:
+
 
 df[df['D1'].dt.day.isin([2, 3, 5])]
 
@@ -793,6 +893,7 @@ df[df['D1'].dt.day.isin([2, 3, 5])]
 # str.islower を使って値が小文字の列を選択してみる。
 
 # In[ ]:
+
 
 df[df['S1'].str.islower()] 
 
@@ -866,11 +967,13 @@ df[df['S1'].str.islower()]
 
 # In[ ]:
 
+
 s1 = pd.Series([1, 2, 3], index = ['I1', 'I2', 'I3'])
 s1
 
 
 # In[ ]:
+
 
 df1 = pd.DataFrame({'C1': [11, 21, 31],
                     'C2': [12, 22, 32],
@@ -885,6 +988,7 @@ df1
 
 # In[ ]:
 
+
 s1[s1 > 2]
 
 
@@ -895,12 +999,14 @@ s1[s1 > 2]
 
 # In[ ]:
 
+
 s1.where(s1 > 2)
 
 
 # NaN 以外でパディングしたい場合、第二引数にパディングに使う値を渡す。
 
 # In[ ]:
+
 
 # NaN ではなく 0 でパディング
 s1.where(s1 > 2, 0)
@@ -912,11 +1018,13 @@ s1.where(s1 > 2, 0)
 
 # In[ ]:
 
+
 # 第一引数の条件に該当しない s1 の 1, 2番目の要素が array の 1, 2 番目の要素で置換される
 s1.where(s1 > 2, np.array([4, 5, 6]))
 
 
 # In[ ]:
+
 
 # 置換用の Series を作る
 s2 = pd.Series([4, 5, 6], index = ['I1', 'I2', 'I3'])
@@ -924,6 +1032,7 @@ s2
 
 
 # In[ ]:
+
 
 # 第一引数の条件に該当しない s1 の 1, 2番目の要素が Series s2 の 1, 2 番目の要素で置換される
 s1.where(s1 > 2, s2)
@@ -933,16 +1042,19 @@ s1.where(s1 > 2, s2)
 
 # In[ ]:
 
+
 df1.where(df1 > 22)
 
 
 # In[ ]:
+
 
 # 0 でパディング
 df1.where(df1 > 22, 0)
 
 
 # In[ ]:
+
 
 # 置換用の DataFrame を作る
 df2 = pd.DataFrame({'C1': [44, 54, 64],
@@ -953,6 +1065,7 @@ df2
 
 
 # In[ ]:
+
 
 # df1 のうち、22以下の値を df2 の値で置換
 df1.where(df1 > 22, df2)
@@ -967,6 +1080,7 @@ df1.where(df1 > 22, df2)
 
 # In[ ]:
 
+
 df1['C4'] = df1['C1'].where(df1['C2'] > 30, df1['C3'])
 df1
 
@@ -975,10 +1089,12 @@ df1
 
 # In[ ]:
 
+
 df1.mask(df1 > 22)
 
 
 # In[ ]:
+
 
 df1.mask(df1 > 22, 0)
 
@@ -992,6 +1108,7 @@ df1.mask(df1 > 22, 0)
 # ### サンプルデータの準備
 
 # In[ ]:
+
 
 df1 = pd.DataFrame({'C1': [11, 21, 31],
                     'C2': [12, 22, 32],
@@ -1008,15 +1125,18 @@ df1
 
 # In[ ]:
 
+
 df1[df1['C1'] > 20]
 
 
 # In[ ]:
 
+
 df1[df1['C2'] < 30]
 
 
 # In[ ]:
+
 
 df1[(df1['C1'] > 20) & (df1['C2'] < 30)]
 
@@ -1027,6 +1147,7 @@ df1[(df1['C1'] > 20) & (df1['C2'] < 30)]
 
 # In[ ]:
 
+
 df1.query('C1 > 20 & C2 < 30')
 
 
@@ -1034,6 +1155,7 @@ df1.query('C1 > 20 & C2 < 30')
 # 例えば以下のような メソッド呼び出しはできない。
 
 # In[ ]:
+
 
 # NG!
 df1.query('C1.isin([11, 21])')
@@ -1045,6 +1167,7 @@ df1.query('C1.isin([11, 21])')
 
 # In[ ]:
 
+
 # in を使えば OK
 df1.query('C1 in [11, 21]')
 
@@ -1052,6 +1175,7 @@ df1.query('C1 in [11, 21]')
 # また、numexpr で利用できる関数も query 名前空間上で呼び出せるようになった模様。
 
 # In[ ]:
+
 
 df1.query('C1 > sqrt(400)')
 
@@ -1065,10 +1189,12 @@ df1.query('C1 > sqrt(400)')
 
 # In[ ]:
 
+
 x = 20
 
 
 # In[ ]:
+
 
 # NG!
 df1.query('C1 > x')
@@ -1076,6 +1202,7 @@ df1.query('C1 > x')
 
 
 # In[ ]:
+
 
 # OK!
 df1.query('C1 > @x')
@@ -1085,6 +1212,7 @@ df1.query('C1 > @x')
 
 # In[ ]:
 
+
 df1.query('index in ["I1", "I2"]')
 
 
@@ -1092,11 +1220,13 @@ df1.query('index in ["I1", "I2"]')
 
 # In[ ]:
 
+
 df_idx = pd.DataFrame({'index': [1, 2, 3]}, index=[3, 2, 1])
 df_idx
 
 
 # In[ ]:
+
 
 df_idx.query('index >= 2')
 
@@ -1107,16 +1237,19 @@ df_idx.query('index >= 2')
 
 # In[ ]:
 
+
 # この方法でも可能だが、正しい使用法ではないらしく警告が出る
 kessan_table_15[kessan_table_15['希薄化後一株当り純利益'].str.contains('([^0-9.]*)', na=False)]
 
 
 # In[ ]:
 
+
 kessan_table_15[kessan_table_15['希薄化後一株当り純利益'].apply(lambda x: type(x) is str)]
 
 
 # In[ ]:
+
 
 # __getitem__ による指定を行うと警告がでるので .loc を使う
 kessan_table_15.loc[kessan_table_15['希薄化後一株当り純利益'].apply(lambda x: type(x) is str), '希薄化後一株当り純利益'] = np.nan
@@ -1129,6 +1262,7 @@ kessan_table_15.loc[kessan_table_15['希薄化後一株当り純利益'].apply(l
 
 # In[ ]:
 
+
 df = pd.DataFrame({'C1': [11, 21, 31, 41],
                     'C2': [12.0, 22.0, 32.0, 42],
                     'C3': [np.nan, '-', '33', 44]},
@@ -1138,12 +1272,14 @@ df
 
 # In[ ]:
 
+
 df['C3'].str.extract('([^0-9.]*)', expand=True)
 
 
 # ## 文字列で表現された数値が小数点を含む場合
 
 # In[ ]:
+
 
 # '－'  を NaN に置換
 # .str を2回も使わないといけないのはなんだか。。。
@@ -1155,12 +1291,14 @@ tables[27].loc[~tables[27]['有利子負債倍率'].str.replace('.', '').str.isn
 
 # In[ ]:
 
+
 fc_table['予想修正配当'].apply(lambda x: re.findall(r'(\d+|\D+)', x))
 
 
 # ## 複数のデータフレームで構成されるリストから列数が任意の数以下のデータフレームを削除
 
 # In[ ]:
+
 
 # 列数が 5 以下のテーブルを削除
 tables = list(filter(lambda x: len(x.columns) > 5, tables))
@@ -1170,17 +1308,20 @@ tables = list(filter(lambda x: len(x.columns) > 5, tables))
 
 # In[ ]:
 
+
 # 保存
 kabupro_kessan.to_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv')
 
 
 # In[ ]:
 
+
 # 保存したファイルの確認
 csv_kessan = pd.read_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv', index_col=0)
 
 
 # In[ ]:
+
 
 # 'Date'列をインデックスに指定してCSVの読み込み、インデックスをdatetime型に変換
 df_quote = pd.read_csv('/Users/Really/Stockyard/_csv/t_1758.csv', index_col='Date')
@@ -1190,6 +1331,7 @@ df_quote
 
 # In[ ]:
 
+
 # kabutan
 pl_csv = pd.read_csv('pl_table.csv', index_col = 0, dtype={'決算期': object}, parse_dates=['発表日'])
 
@@ -1197,6 +1339,7 @@ pl_csv = pd.read_csv('pl_table.csv', index_col = 0, dtype={'決算期': object},
 # ## NaN の判定
 
 # In[ ]:
+
 
 # 行単位や列単位ではなく要素 (float) を判定したい場合、isnull() が使えない
 
@@ -1212,6 +1355,7 @@ df.ix[0,0] == df.ix[0,0]
 
 # In[ ]:
 
+
 df_sample.rename(columns={'score1': 'point1'})  #対応関係を辞書型で入れてやる
 
 
@@ -1219,10 +1363,12 @@ df_sample.rename(columns={'score1': 'point1'})  #対応関係を辞書型で入�
 
 # In[ ]:
 
+
 df = pd.DataFrame(index=[1,2], columns=[1,2]) # NaN
 
 
 # In[ ]:
+
 
 df = pd.DataFrame("", index=[1,2], columns=[1,2]) # 空文字
 
@@ -1231,10 +1377,12 @@ df = pd.DataFrame("", index=[1,2], columns=[1,2]) # 空文字
 
 # In[ ]:
 
+
 a['d'] = float(NaN)
 
 
 # In[ ]:
+
 
 a['d'] = ''
 
@@ -1243,6 +1391,7 @@ a['d'] = ''
 
 # In[ ]:
 
+
 lst = fc_table.columns.tolist()
 
 
@@ -1250,10 +1399,12 @@ lst = fc_table.columns.tolist()
 
 # In[ ]:
 
+
 import pandas.tseries.offsets as offsets
 
 
 # In[ ]:
+
 
 pd.to_datetime(bs_table['決算期'], format='%Y.%m') + offsets.MonthEnd()
 
@@ -1262,17 +1413,20 @@ pd.to_datetime(bs_table['決算期'], format='%Y.%m') + offsets.MonthEnd()
 
 # In[ ]:
 
+
 # 行 3 と 4 を削除
 df.drop([3,4])
 
 
 # In[ ]:
 
+
 # 列 A を削除
 df.drop("A", axis=1)
 
 
 # In[ ]:
+
 
 # Python の del ステートメントを利用する方法
 # 列 A を削除
@@ -1283,11 +1437,13 @@ del df['A']
 
 # In[ ]:
 
+
 # .astype()の引数は辞書で指定できる。
 df.astype({'a': int, 'c': str})
 
 
 # In[ ]:
+
 
 # all_stock_tableにあってdomestic_stock_tableにない'code'を持つ行を抽出
 all_stock_table[~all_stock_table['code'].isin(domestic_stock_table['code'])]
@@ -1295,11 +1451,13 @@ all_stock_table[~all_stock_table['code'].isin(domestic_stock_table['code'])]
 
 # In[ ]:
 
+
 # marketの種別で集計
 all_stock_table.groupby('market').count()
 
 
 # In[ ]:
+
 
 # 指定した値をNaNに置換、NaNはfloat型
 all_stock_table.replace('-', np.NaN)
@@ -1307,10 +1465,12 @@ all_stock_table.replace('-', np.NaN)
 
 # In[ ]:
 
+
 result.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'] # 列名を変更
 
 
 # In[ ]:
+
 
 # 列単位で個別に名称を変更する場合
 all_stock_table = all_stock_table.rename(columns={'市場・商品区分': 'market'})
@@ -1318,21 +1478,25 @@ all_stock_table = all_stock_table.rename(columns={'市場・商品区分': 'mark
 
 # In[ ]:
 
+
 # marketの値を指定して選択
 len(all_stock_table.query("market == '市場第一部（内国株）' | market == '市場第二部（内国株）'"))
 
 
 # In[ ]:
 
+
 df_quote.dtypes
 
 
 # In[ ]:
 
+
 df_quote.index
 
 
 # In[ ]:
+
 
 # datetime型インデックスの作成例
 dtidx = pd.date_range('2000-01-01', '2017-12-01', freq='B') # freq='B'はBusiness Day
@@ -1341,6 +1505,7 @@ dtidx
 
 # In[ ]:
 
+
 # 他のdatetime型インデックスにデータをあてはめる
 quote_bd = pd.DataFrame(df_quote, index=pd.date_range(df_quote.index[0], df_quote.index[-1], freq='B'))
 quote_bd
@@ -1348,25 +1513,30 @@ quote_bd
 
 # In[ ]:
 
+
 df['発表日'].apply(lambda x: parse(x, yearfirst=True).date())
 
 
 # In[ ]:
+
 
 df['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date())
 
 
 # In[ ]:
 
+
 tables[11].isnull()
 
 
 # In[ ]:
 
+
 tables[11].isnull().any()
 
 
 # In[ ]:
+
 
 # null が存在する行を取り除いて価格データとする 参考 https://qiita.com/u1and0/items/fd2780813b690a40c197
 result = tmp_price[~tmp_price.isnull().any(axis=1)].astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
@@ -1374,11 +1544,13 @@ result = tmp_price[~tmp_price.isnull().any(axis=1)].astype(float).astype(int) # 
 
 # In[ ]:
 
+
 # 価格と価格以外の情報を分離
 tmp_info = tmp_price[tmp_price.isnull().any(axis=1)].reset_index()
 
 
 # In[ ]:
+
 
 # 全ての列項目がnullの行を排除
 tables[11][~tables[11].isnull().all(axis=1)]
@@ -1386,17 +1558,20 @@ tables[11][~tables[11].isnull().all(axis=1)]
 
 # In[ ]:
 
+
 # リスト内包表記。pandasではなくリストの話
 csv_table = [i for i in csv_table if re.search(r't_\d*.csv', x)]
 
 
 # In[ ]:
 
+
 # str アクセサ
 [tables[11]['決算期'].str.contains('前期比')]
 
 
 # In[ ]:
+
 
 # 複数条件による判定
 # https://qiita.com/HirofumiYashima/items/fa76119d29bcb6e0bae7
@@ -1406,11 +1581,13 @@ tables[11][~((tables[11]['決算期'].str.contains('予')) | (tables[11]['決算
 
 # In[ ]:
 
+
 # 行の要素を分割、元の列と新しく追加する列にそれぞれ代入
 df[['会計基準', '決算期']] = pd.DataFrame(list(df['決算期'].str.split(' ')))
 
 
 # In[ ]:
+
 
 # インデックスを振り直す
 tables[11].reset_index(drop=True)
@@ -1418,11 +1595,13 @@ tables[11].reset_index(drop=True)
 
 # In[ ]:
 
+
 # 列の並べ替えは列名のリストで
 df = df[['会計基準', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '発表日']]
 
 
 # In[ ]:
+
 
 # 列ごとに関数適用
 # applyは遅いという話もあるので要検討。 http://sinhrks.hatenablog.com/entry/2015/07/11/223124
@@ -1430,6 +1609,7 @@ df[['売上高', '営業益', '経常益', '最終益']] = df[['売上高', '営
 
 
 # In[ ]:
+
 
 df.duplicated() # booleanのシリーズ
 df.duplicated().any() # Trueが含まれるかどうか
@@ -1439,15 +1619,18 @@ kessan_table[kessan_table.duplicated(keep=False)] # 重複行をそれぞれ見�
 
 # In[ ]:
 
+
 df.drop_duplicates() # 行全体で重複をチェック
 
 
 # In[ ]:
 
+
 df.drop_duplicates(['x', 'y']) # 列指定で重複をチェック、前方残し
 
 
 # In[ ]:
+
 
 df.drop_duplicates(['x', 'y'], keep='last') # 後方残し
 
@@ -1456,10 +1639,12 @@ df.drop_duplicates(['x', 'y'], keep='last') # 後方残し
 
 # In[ ]:
 
+
 sql = stock.sql()
 
 
 # In[ ]:
+
 
 help(sql)
 
@@ -1467,6 +1652,7 @@ help(sql)
 # # MySQLに接続 (クラス不使用)
 
 # In[ ]:
+
 
 db_settings = {
     "host": 'localhost',
@@ -1482,6 +1668,7 @@ engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.form
 # # - Memo - MySQL クエリ
 
 # In[ ]:
+
 
 # mysql>
 CREATE DATABASE StockPrice_Yahoo_1 DEFAULT CHARACTER SET utf8mb4;

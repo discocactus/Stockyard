@@ -18,7 +18,7 @@ class yahoo_stock_crawl_spider(CrawlSpider):
     # リンクをたどるためのルールのリスト
     # https://stocks.finance.yahoo.co.jp/stocks/detail/?code=1301
     rules = (
-        # 試験的に一覧の9ページ目まで。末尾の \d$ を \d+$ に変えれば10ページ以降も辿れるはず
+        # 試験的に一覧の9ページ目(または指定ページ)まで。末尾の \d$ (or [1-2]$) を \d+$ に変えれば10ページ以降も辿れるはず
         Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=[1-2]$')),
         Rule(LinkExtractor(allow=r'/stocks/detail/\?code=\d+$'), callback='parse_fundamental'),
     )

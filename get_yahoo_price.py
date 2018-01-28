@@ -14,6 +14,7 @@ Pro Market銘柄はYahooにはないらしい
 
 # In[ ]:
 
+
 import numpy as np
 import pandas as pd
 import pandas.tseries.offsets as offsets
@@ -34,6 +35,7 @@ import stock
 
 # In[ ]:
 
+
 importlib.reload(stock)
 
 
@@ -41,10 +43,12 @@ importlib.reload(stock)
 
 # In[ ]:
 
+
 sql = stock.sql()
 
 
 # In[ ]:
+
 
 help(sql)
 
@@ -55,6 +59,7 @@ help(sql)
 
 # In[ ]:
 
+
 done = yahoo_stock_code
 done
 
@@ -62,6 +67,7 @@ done
 # ## 連続読み込み用内国株のコードリスト作成
 
 # In[ ]:
+
 
 start_index = 3100
 increase_number = 100
@@ -76,6 +82,7 @@ print('Next start from {0}'.format(start_index + increase_number))
 
 # In[ ]:
 
+
 reading_code = sql.get_new_added_stock_code()
 reading_code
 
@@ -83,6 +90,7 @@ reading_code
 # ## 任意選択読み込み用コードリスト作成
 
 # In[ ]:
+
 
 read_start = 71
 reading_code = keep_failed[read_start : ]#read_start + 8]
@@ -94,6 +102,7 @@ reading_code, len(reading_code),
 
 # In[ ]:
 
+
 reading_code = failed
 reading_code, len(reading_code)
 
@@ -101,6 +110,7 @@ reading_code, len(reading_code)
 # ## 連続読み込み書き込み
 
 # In[ ]:
+
 
 # 読み込み期間の設定
 start = '2000-01-01'
@@ -178,11 +188,13 @@ logging.info('{0} get_price Finished'.format(dt.datetime.now().strftime('%Y-%m-%
 
 # In[ ]:
 
+
 keep_info = info
 keep_info
 
 
 # In[ ]:
+
 
 keep_failed = failed
 keep_failed
@@ -192,12 +204,14 @@ keep_failed
 
 # In[ ]:
 
+
 keep_info.to_csv('/Users/Really/Stockyard/_csv/keep_info.csv')
 sql = stock.sql()
 sql.write_info('keep_info', keep_info)
 
 
 # In[ ]:
+
 
 pd.Series(keep_failed).to_csv('/Users/Really/Stockyard/_csv/keep_failed.csv')
 
@@ -208,16 +222,19 @@ pd.Series(keep_failed).to_csv('/Users/Really/Stockyard/_csv/keep_failed.csv')
 
 # In[ ]:
 
+
 start_index = 0
 
 
 # In[ ]:
+
 
 start_index = end_index
 end_index
 
 
 # In[ ]:
+
 
 increase_number = 10
 end_index = None
@@ -235,6 +252,7 @@ print('Next start from {0}'.format(end_index))
 # __TODO 3542銘柄一括更新で3時間以上かかる。要検討 (うち、銘柄間1秒スリープ分合計1時間弱)__
 
 # In[ ]:
+
 
 end = None  # 読み込み終了日
 
@@ -316,6 +334,7 @@ logging.info('{0} add_new_price Finished'.format(dt.datetime.now().strftime('%Y-
 
 # In[ ]:
 
+
 for i in range(increase_number):
     print('[{0}]'.format(reading_code[i]))
     print(sql.statement_query('select * from t_{0} order by Date desc limit 3'.format(reading_code[i])))
@@ -326,6 +345,7 @@ for i in range(increase_number):
 # ## 単一銘柄の読み込み
 
 # In[ ]:
+
 
 code = 9284 # 銘柄コード
 
@@ -370,10 +390,12 @@ print(failed)
 
 # In[ ]:
 
+
 price
 
 
 # In[ ]:
+
 
 info
 
@@ -381,6 +403,7 @@ info
 # ## 単一銘柄の更新
 
 # In[ ]:
+
 
 code = 1301 # 銘柄コード
 end = None # 読み込み終了日
@@ -429,10 +452,12 @@ print(failed)
 
 # In[ ]:
 
+
 tmp_failed = save_failed
 
 
 # In[ ]:
+
 
 sql = stock.sql()
 
@@ -448,6 +473,7 @@ for tmp_index in range(len(tmp_failed)):
 
 # In[ ]:
 
+
 # original table
 yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', engine, index_col=None).drop('index', axis=1)
 
@@ -456,6 +482,7 @@ len(table_index), end_index, table_index[-10:]
 
 
 # In[ ]:
+
 
 # _yahoo_csvフォルダ内の価格データ一覧をリスト化
 
@@ -467,10 +494,12 @@ print(csv_table)
 
 # In[ ]:
 
+
 type(list(map(int, csv_table[0]))), type(csv_table) #, type(table_index[0])
 
 
 # In[ ]:
+
 
 # 銘柄コードのみ抽出
 # TODO 4桁以上のコードもあるので正規表現で書き直す
@@ -480,16 +509,19 @@ for t in range(len(csv_table)):
 
 # In[ ]:
 
+
 # オブジェクト、データの型の変換例
 list(map(int, csv_table))[:5]
 
 
 # In[ ]:
 
+
 len(csv_table), len(table_index)
 
 
 # In[ ]:
+
 
 # 内容が同一かを確認するためデータフレーム化
 #TODO もっといいやり方があるはず
@@ -498,6 +530,7 @@ table_df
 
 
 # In[ ]:
+
 
 table_df.ix[0].astype(str) == table_df.ix[1]
 
@@ -508,6 +541,7 @@ table_df.ix[0].astype(str) == table_df.ix[1]
 
 # In[ ]:
 
+
 info = pd.DataFrame(index=[], columns=['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'])
 info = info.astype({'Code': int}) # int型を代入してもなぜかfloat型になってしまうので、あらかじめ明示しておく
 info
@@ -517,6 +551,7 @@ info
 
 # In[ ]:
 
+
 info = sql.get_info('yahoo_info')
 info
 
@@ -524,6 +559,7 @@ info
 # ## 価格データの読み込み前にMySQLに保存済みのinfoテーブルとの結合が必要な場合
 
 # In[ ]:
+
 
 info_sql = sql.get_info('yahoo_info')
 info = info.append(info_sql).sort_values(by=['Code', 'Date']).reset_index(drop=True)
@@ -534,35 +570,42 @@ info['Date'] = pd.to_datetime(info['Date'])
 
 # In[ ]:
 
+
 info
 
 
 # In[ ]:
+
 
 info = info.drop_duplicates()
 
 
 # In[ ]:
 
+
 info = info.sort_values(by=['Code', 'Date'])
 
 
 # In[ ]:
+
 
 info.duplicated().any()
 
 
 # In[ ]:
 
+
 info[info.duplicated()]
 
 
 # In[ ]:
 
+
 info.to_csv('/Users/Really/Stockyard/_csv/yahoo_info.csv')
 
 
 # In[ ]:
+
 
 sql.write_info('yahoo_info', info)
 
@@ -570,6 +613,7 @@ sql.write_info('yahoo_info', info)
 # # MySQLのみ保存済み、csvに書き出していない価格データを処理 (処理済み)
 
 # In[ ]:
+
 
 sql_to_csv_list = domestic_stock_table.ix[:99, 1]
 
@@ -583,6 +627,7 @@ for i in range(len(sql_to_csv_list)):
 # ## MySQLに接続
 
 # In[ ]:
+
 
 db_settings = {
     "host": 'localhost',
@@ -599,6 +644,7 @@ engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.form
 
 # In[ ]:
 
+
 # クラスを使わない場合
 # テーブル全体を選択しているので read_sql_table を使用するのと同じこと
 statement = "SELECT * FROM info"
@@ -610,6 +656,7 @@ info
 # ## 読み込む内国株のコードリスト作成 (クラス不使用版)
 
 # In[ ]:
+
 
 # 内国株だけにする
 # MySQLに保存済みの内国株テーブルから作成。今後はこちらを使用する
@@ -627,6 +674,7 @@ print('Next start from {0}'.format(start_index + increase_number))
 # # いらなくなったコードの保管場所
 
 # In[ ]:
+
 
 # 列単位で個別に名称を変更する場合
 all_stock_table = all_stock_table.rename(columns={'市場・商品区分': 'market'})

@@ -73,6 +73,7 @@
 
 # In[ ]:
 
+
 # import
 import sys
 import os
@@ -96,16 +97,19 @@ import stock
 
 # In[ ]:
 
+
 importlib.reload(stock)
 
 
 # In[ ]:
+
 
 # pandas の最大表示列数を設定 (max_rows で表示行数の設定も可能)
 pd.set_option('display.max_columns', 30)
 
 
 # In[ ]:
+
 
 sql = stock.sql()
 
@@ -114,25 +118,30 @@ sql = stock.sql()
 
 # In[ ]:
 
+
 table_name = 'kabupro_kessan'
 
 
 # In[ ]:
+
 
 kabupro = sql.read_table(table_name)
 
 
 # In[ ]:
 
+
 kabupro
 
 
 # In[ ]:
 
+
 kabupro.columns
 
 
 # In[ ]:
+
 
 kabupro.ix[14]
 # 株プロにしか無い項目: 希薄化後一株当り純利益, 純資産又は株主資本, 営業キャッシュフロー, 投資キャッシュフロー, 財務キャッシュフロー
@@ -141,6 +150,7 @@ kabupro.ix[14]
 # ## 参考コード
 
 # In[ ]:
+
 
 def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
@@ -190,6 +200,7 @@ def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
 
 
 # In[ ]:
+
 
 # yahoo 初回連続読み込み
 # 読み込み期間の設定
@@ -266,10 +277,12 @@ logging.info('{0} get_price Finished'.format(dt.datetime.now().strftime('%Y-%m-%
 
 # In[ ]:
 
+
 get_ipython().run_cell_magic('writefile', 'amazon_order_history.py', '\n# Amazon.co.jpの注文履歴を取得する\n\nimport sys\nimport os\nfrom robobrowser import RoboBrowser\n\n# 認証の情報は環境変数から取得する\nAMAZON_EMAIL = os.environ[\'AMAZON_EMAIL\']\nAMAZON_PASSWORD = os.environ[\'AMAZON_PASSWORD\']\n\n# RoboBrowserオブジェクトを作成する\nbrowser = RoboBrowser(\n    parser=\'html.parser\', # Beatiful Soupで使用するパーサーを指定\n    # Cookieが使用できないと表示されてログインできない問題を回避するため\n    # 通常のブラウザーのUser-Agent(ここではFirefoxのもの)を使う\n    user_agent=\'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:45.0) Gecko/20100101 Firefox/45.0\')\n\n\ndef main():\n    # 注文履歴のページを開く\n    print(\'Navigating...\', file=sys.stderr)\n    browser.open(\'https://www.amazon.co.jp/gp/css/order-history\')\n    \n    # サインインページにリダイレクトされていることを確認する\n    assert \'Amazonサインイン\' in browser.parsed.title.string\n    \n    # name="signIn" というサインインフォームを埋める。\n    # フォームのname属性の値はブラウザーの開発者ツールで確認できる。\n    form = browser.get_form(attrs={\'name\': \'signIn\'})\n    form[\'email\'] = AMAZON_EMAIL\n    form[\'password\'] = AMAZON_PASSWORD\n    \n    # フォームを送信する。正常にログインするにはRefererヘッダーとAccept-Languageヘッダーが必要。\n    print(\'Signing in...\', file=sys.stderr)\n    browser.submit_form(form, headers={\n        \'Referer\': browser.url,\n        \'Accept-Language\': \'ja,en-US;q=0.7,en;q=0.3\',\n    })\n    \n    # ログインに失敗する場合は、次の行のコメントを外してHTMLのソースを確認すると良い。\n    # print(browser.parsed.prettify())\n\n    # ページャーをたどる。\n    while True:\n        assert \'注文履歴\' in browser.parsed.title.string # 注文履歴画面が表示されていることを確認する。\n        \n        print_order_history() # 注文履歴を表示する。\n        \n        link_to_next = browser.get_link(\'次へ\') #「次へ」というテキストを持つリンクを取得する。\n        if not link_to_next:\n            break #「次へ」のリンクがない場合はループを抜けて終了する。\n            \n        print(\'Following link to next page...\', file=sys.stderr)\n        browser.follow_link(link_to_next) # 次へ」というリンクをたどる。\n        \n        \ndef print_order_history():\n    """\n    現在のページのすべての注文履歴を表示する\n    """\n    for line_item in browser.select(\'.order-info\'):\n        order = {} # 注文の情報を格納するためのdict\n        # ページ内のすべての注文履歴について反復する。ブラウザーの開発者ツールでclass属性の値を確認できる\n        # 注文の情報のすべての列について反復する\n        for column in line_item.select(\'.a-column\'):\n            label_element = column.select_one(\'.label\')\n            value_element = column.select_one(\'.value\')\n            # ラベルと値がない列は無視する。\n            if label_element and value_element:\n                label = label_element.get_text().strip()\n                value = value_element.get_text().strip()\n                order[label] = value\n        print(order[\'注文日\'], order[\'合計\']) # 注文の情報を表示する。\n        \n\nif __name__ == \'__main__\':\n    main()')
 
 
 # In[ ]:
+
 
 get_ipython().system('forego run python amazon_order_history.py')
 
@@ -279,6 +292,7 @@ get_ipython().system('forego run python amazon_order_history.py')
 # __TODO__ forego を利用してログイン情報を隠せないか検討
 
 # In[ ]:
+
 
 # sign-in
 # 認証の情報
@@ -318,6 +332,7 @@ print(browser.select('.is-success')[0].text.strip())
 
 # In[ ]:
 
+
 # 2017年11月分東証銘柄一覧のエクセルファイルを読み込む # http://www.jpx.co.jp/markets/statistics-equities/misc/01.html
 all_stock_table = pd.read_excel('/Users/Really/Stockyard/_dl_data/data_j_1711.xls')
 all_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'category_33', 'code_17', 'category_17', 'code_scale', 'scale'] # 列名を変更
@@ -325,11 +340,13 @@ all_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'categor
 
 # In[ ]:
 
+
 # 内国株のテーブル作成
 domestic_stock_table = all_stock_table.ix[all_stock_table['market'].str.contains('内国株')].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 表示
 domestic_stock_table
@@ -337,10 +354,12 @@ domestic_stock_table
 
 # In[ ]:
 
+
 code_list = list(domestic_stock_table['code'])
 
 
 # In[ ]:
+
 
 # 伊藤園第1種優先株式を削除
 # 要素の値を直接指定して削除することができる
@@ -349,15 +368,18 @@ code_list.remove(25935)
 
 # In[ ]:
 
+
 code_list[-10:]
 
 
 # In[ ]:
 
+
 len(code_list)
 
 
 # In[ ]:
+
 
 start_index = 0
 increase_number = 2
@@ -372,6 +394,7 @@ print('Next start from {0}'.format(start_index + increase_number))
 
 # In[ ]:
 
+
 reading_code = [3975, 3995, 7196, 7810, 9262]
 reading_code
 
@@ -381,6 +404,7 @@ reading_code
 # ## get_html 関数 (retry 付き)
 
 # In[ ]:
+
 
 @retry(tries=5, delay=1, backoff=2)
 def get_html(url):
@@ -397,6 +421,7 @@ def get_html(url):
 
 # In[ ]:
 
+
 @retry(tries=5, delay=1, backoff=2)
 def get_html(url):
     browser.open(url)
@@ -411,6 +436,7 @@ def get_html(url):
 # ## 連続読み込み
 
 # In[ ]:
+
 
 # ロガー設定
 start_time = dt.datetime.now()
@@ -453,6 +479,7 @@ logging.info('{0} get_html Finished'.format(dt.datetime.now().strftime('%Y-%m-%d
 
 # In[ ]:
 
+
 # ロガー設定
 start_time = dt.datetime.now()
 logging.basicConfig(filename='get_kabutan_html_{0}.log'.format(start_time.strftime('%Y-%m-%d')), filemode='w', level=logging.INFO)
@@ -494,16 +521,19 @@ logging.info('{0} get_html Finished'.format(dt.datetime.now().strftime('%Y-%m-%d
 
 # In[ ]:
 
+
 code = 1743
 
 
 # In[ ]:
+
 
 # 保存した PC用 html からテーブルを読み込んでみる
 tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
 
 
 # In[ ]:
+
 
 for idx in range(len(tables)):
     print(idx)
@@ -512,11 +542,13 @@ for idx in range(len(tables)):
 
 # In[ ]:
 
+
 # 保存した モバイル用 html からテーブルを読み込んでみる
 mobile = pd.read_html('/Users/Really/Stockyard/_kabutan_mobile_html/kabutan_{0}.html'.format(code), header=0)
 
 
 # In[ ]:
+
 
 for idx in range(len(mobile)):
     print(idx)
@@ -526,6 +558,7 @@ for idx in range(len(mobile)):
 # __各銘柄のテーブル数をカウント__
 
 # In[ ]:
+
 
 table_qty = []
 
@@ -540,10 +573,12 @@ for index in range(len(code_list)):
 
 # In[ ]:
 
+
 len(table_qty)
 
 
 # In[ ]:
+
 
 max(table_qty)
 # 38
@@ -551,17 +586,20 @@ max(table_qty)
 
 # In[ ]:
 
+
 min(table_qty)
 # 17
 
 
 # In[ ]:
 
+
 code_list[table_qty.index(max(table_qty))]
 # 9101
 
 
 # In[ ]:
+
 
 code_list[table_qty.index(min(table_qty))]
 # 3995
@@ -571,6 +609,7 @@ code_list[table_qty.index(min(table_qty))]
 
 # In[ ]:
 
+
 for table_number in range(len(tables)):
     print('{0}: {1}'.format(table_number, len(tables[table_number].columns)))
 
@@ -578,6 +617,7 @@ for table_number in range(len(tables)):
 # # 読み込み〜整形、連続処理
 
 # In[ ]:
+
 
 # ---- 保存した html ファイルからテーブル属性のみ読み込み、整形 ---- #
 
@@ -932,6 +972,7 @@ bs_table = bs_table[['発表日', '決算期', '１株純資産', '自己資本�
 
 # In[ ]:
 
+
 display(pl_table)
 display(bs_table)
 display(fc_table)
@@ -945,10 +986,12 @@ display(qr_table)
 
 # In[ ]:
 
+
 code = 9262 #7810 # 7196 # 3995 # 3975 # 3863 # 3480 # 1418 # 1408 # 1376 # 7203 # 1909
 
 
 # In[ ]:
+
 
 # 保存した html からテーブル属性を読み込み
 tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
@@ -959,10 +1002,12 @@ tables = list(filter(lambda x: len(x.columns) > 5, tables))
 
 # In[ ]:
 
+
 len(tables)
 
 
 # In[ ]:
+
 
 # 抽出用テーブルの作成
 pl_table = pd.DataFrame()
@@ -993,11 +1038,13 @@ for table in tables:
 
 # In[ ]:
 
+
 # 保存した モバイル用 html からテーブル属性を読み込み
 mobile = pd.read_html('/Users/Really/Stockyard/_kabutan_mobile_html/kabutan_{0}.html'.format(code), header=0)
 
 
 # In[ ]:
+
 
 # 抽出用テーブルの作成
 pl_mobile = pd.DataFrame()
@@ -1029,6 +1076,7 @@ for idx, table in enumerate(mobile):
 
 # In[ ]:
 
+
 display(pl_table)
 display(bs_table)
 display(fc_table)
@@ -1040,10 +1088,12 @@ display(qr_table)
 # 株プロに無い項目: １株配
 # In[ ]:
 
+
 tables[3]
 
 
 # In[ ]:
+
 
 # 通期業績テーブルの抽出 (上書き)
 pl_table = pd.DataFrame()
@@ -1058,21 +1108,25 @@ for idx, table in enumerate(tables):
 
 # In[ ]:
 
+
 pl_table
 
 
 # In[ ]:
+
 
 pl_mobile
 
 
 # In[ ]:
 
+
 # 全ての列項目がnullの行を除去
 pl_table = pl_table[~pl_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # モバイル版の会計基準を結合、無い場合は空の列を作成
 if len(pl_mobile) > 0:
@@ -1083,17 +1137,20 @@ else:
 
 # In[ ]:
 
+
 # 後で四半期業績の決算期作成に使うので予想値行削除前に保持しておく
 pl_end = pl_table['決算期'][~pl_table['決算期'].str.contains('前期比')].apply(lambda x: x.split(' ')[-1])
 
 
 # In[ ]:
 
+
 # 予想値と前期比の行を除去
 pl_table = pl_table[~((pl_table['決算期'].str.contains('予')) | (pl_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 # 後で四半期業績の決算期作成に使うのでこのテーブルでは予想値行削除前に処理する
@@ -1107,6 +1164,7 @@ for idx, end in pl_table['決算期'].iteritems():
 
 # In[ ]:
 
+
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 # pl_table['決算期'] = pl_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
 pl_table['発表日'] = pl_table.loc[pl_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
@@ -1116,6 +1174,7 @@ pl_table['発表日'] = pd.to_datetime(pl_table['発表日'], format='%Y-%m-%d')
 
 
 # In[ ]:
+
 
 # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
 num_col = ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')
@@ -1127,12 +1186,14 @@ for key in num_col:
 
 # In[ ]:
 
+
 # 型変換
 # 辞書内包表記による一括変換
 pl_table = pl_table.astype({x: float for x in ('売上高', '営業益', '経常益', '最終益', '１株益', '１株配')})
 
 
 # In[ ]:
+
 
 # 100万円単位換算
 million_col = ('売上高', '営業益', '経常益', '最終益')
@@ -1141,27 +1202,32 @@ pl_table.loc[:, million_col] = pl_table.loc[:, million_col].apply(lambda x: x * 
 
 # In[ ]:
 
+
 # 列の並び替え
 pl_table = pl_table[['発表日', '決算期', '売上高', '営業益', '経常益', '最終益', '１株益', '１株配', '会計基準', '決算期変更']]
 
 
 # In[ ]:
 
+
 pl_table.dtypes
 
 
 # In[ ]:
+
 
 pl_table
 
 
 # In[ ]:
 
+
 kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'] == '通期'), 
            ['連結個別', '決算期', '期首', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']]
 
 
 # In[ ]:
+
 
 kabupro.columns
 
@@ -1170,10 +1236,12 @@ kabupro.columns
 
 # In[ ]:
 
+
 tables[4]
 
 
 # In[ ]:
+
 
 # 実体行
 tables[4][tables[4].index % 2 == 0].reset_index(drop=True)
@@ -1181,11 +1249,13 @@ tables[4][tables[4].index % 2 == 0].reset_index(drop=True)
 
 # In[ ]:
 
+
 # 不要行
 tables[4][tables[4].index % 2 != 0]
 
 
 # In[ ]:
+
 
 # 業績予想テーブルの抽出 (上書き)
 fc_table = pd.DataFrame()
@@ -1200,20 +1270,24 @@ for idx, table in enumerate(tables):
 
 # In[ ]:
 
+
 fc_table
 
 
 # In[ ]:
+
 
 fc_mobile
 
 
 # In[ ]:
 
+
 fc_table.columns
 
 
 # In[ ]:
+
 
 # 業績予想データが無い場合、ダミーのデータフレームを作成
 if len(fc_table.columns) < 9:
@@ -1221,6 +1295,7 @@ if len(fc_table.columns) < 9:
 
 
 # In[ ]:
+
 
 # 列名の変更
 fc_table.columns = ['会計基準', '決算期', '発表日', 
@@ -1230,17 +1305,20 @@ fc_table.columns = ['会計基準', '決算期', '発表日',
 
 # In[ ]:
 
+
 # 不要行、不要列の削除、並び替え
 fc_table = fc_table.ix[fc_table.index % 2 == 0, ['会計基準', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当', '発表日']].reset_index(drop=True)
 
 
 # In[ ]:
 
+
 # 全ての列項目がnullの行を除去
 fc_table = fc_table[~fc_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # モバイル版の会計基準を代入、無い場合は空値を代入
 if len(fc_mobile) > 0:
@@ -1251,17 +1329,20 @@ elif len(fc_table) > 0:
 
 # In[ ]:
 
+
 # 実績は不要?
 fc_table = fc_table.ix[fc_table['決算期'] != '実績'].reset_index(drop=True)
 
 
 # In[ ]:
 
+
 # 決算期の NaN 埋め
 fc_table['決算期'] = fc_table['決算期'].fillna(method='ffill')
 
 
 # In[ ]:
+
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 fc_table['決算期'] = fc_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
@@ -1274,6 +1355,7 @@ for idx, end in fc_table['決算期'].iteritems():
 
 # In[ ]:
 
+
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 # fc_table['決算期'] = fc_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
 fc_table['発表日'] = fc_table.loc[fc_table['発表日'].str.match('\d\d/\d\d/\d\d'), '発表日'].apply(lambda x: parse(x, yearfirst=True).date())
@@ -1283,6 +1365,7 @@ fc_table['発表日'] = pd.to_datetime(fc_table['発表日'], format='%Y-%m-%d')
 
 
 # In[ ]:
+
 
 # 修正配当の列から分割併合記号を分離 (修正配当の予想値は入っていない銘柄もある)
 fc_table['分割併合'] = ""
@@ -1299,6 +1382,7 @@ if fc_table['予想修正配当'].dtypes == object:
 
 # In[ ]:
 
+
 # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
 num_col = ('予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当')
 for key in num_col:
@@ -1309,12 +1393,14 @@ for key in num_col:
 
 # In[ ]:
 
+
 # 型変換
 # 辞書内包表記による一括変換
 fc_table = fc_table.astype({x: float for x in ('予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当')})
 
 
 # In[ ]:
+
 
 # 100万円単位換算
 million_col = ('予想売上高', '予想営業益', '予想経常益', '予想最終益')
@@ -1323,16 +1409,19 @@ fc_table.loc[:, million_col] = fc_table.loc[:, million_col].apply(lambda x: x * 
 
 # In[ ]:
 
+
 # 列の並び替え
 fc_table = fc_table[['発表日', '決算期', '予想売上高', '予想営業益', '予想経常益', '予想最終益', '予想修正配当', '分割併合', '会計基準', '決算期変更']]
 
 
 # In[ ]:
 
+
 fc_table.dtypes
 
 
 # In[ ]:
+
 
 fc_table
 
@@ -1347,10 +1436,12 @@ fc_table
 # 前年同期比はいらなそう
 # In[ ]:
 
+
 tables[8]
 
 
 # In[ ]:
+
 
 # 3ヶ月業績テーブルの抽出 (上書き)
 qr_table = pd.DataFrame()
@@ -1365,20 +1456,24 @@ for idx, table in enumerate(tables):
 
 # In[ ]:
 
+
 qr_table
 
 
 # In[ ]:
+
 
 qr_mobile
 
 
 # In[ ]:
 
+
 qr_table.columns
 
 
 # In[ ]:
+
 
 # 全ての列項目がnullの行を除去
 qr_table = qr_table[~qr_table.isnull().all(axis=1)].reset_index(drop=True)
@@ -1386,17 +1481,20 @@ qr_table = qr_table[~qr_table.isnull().all(axis=1)].reset_index(drop=True)
 
 # In[ ]:
 
+
 # モバイル版の会計基準を結合
 qr_table['会計基準'] = qr_mobile['会計基準']
 
 
 # In[ ]:
 
+
 # 予想値と前年同期比の行を除去
 qr_table = qr_table[~((qr_table['決算期'].str.contains('予')) | (qr_table['決算期'].str.contains('前年同期比')))].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 qr_table['決算期'] = qr_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
@@ -1409,11 +1507,13 @@ for idx, end in qr_table['決算期'].iteritems():
 
 # In[ ]:
 
+
 # 列名の変更
 qr_table.columns = ['Q期首', 'Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率', '発表日', '会計基準', '決算期変更']
 
 
 # In[ ]:
+
 
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 qr_table['Q期首'] = qr_table.loc[qr_table['Q期首'].str.match('\d\d.\d\d-\d\d'), 'Q期首'].apply(lambda x: 
@@ -1426,6 +1526,7 @@ qr_table['発表日'] = pd.to_datetime(qr_table['発表日'], format='%Y-%m-%d')
 
 # In[ ]:
 
+
 # 通期業績の決算期を参照して決算期列を追加
 # 通期業績の予想値削除前に別名でキープした決算期シリーズを利用
 for start_idx, start in qr_table['Q期首'].iteritems():
@@ -1437,6 +1538,7 @@ for start_idx, start in qr_table['Q期首'].iteritems():
 
 # In[ ]:
 
+
 # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
 num_col = ('Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率')
 for key in num_col:
@@ -1447,12 +1549,14 @@ for key in num_col:
 
 # In[ ]:
 
+
 # 型変換
 # 辞書内包表記による一括変換
 qr_table = qr_table.astype({x: float for x in ('Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率')})
 
 
 # In[ ]:
+
 
 # 100万円単位換算
 million_col = ('Q売上高', 'Q営業益', 'Q経常益', 'Q最終益')
@@ -1461,11 +1565,13 @@ qr_table.loc[:, million_col] = qr_table.loc[:, million_col].apply(lambda x: x * 
 
 # In[ ]:
 
+
 # 列の並び替え
 qr_table = qr_table[['発表日', '決算期', 'Q期首', 'Q売上高', 'Q営業益', 'Q経常益', 'Q最終益', 'Q１株益', 'Q売上営業損益率', '会計基準', '決算期変更']]
 
 
 # In[ ]:
+
 
 # モバイル版のみ業績予想テーブルがない場合があるので、四半期業績の整形処理後に決算期が同期の四半期業績から会計基準を取得
 # 3975で確認
@@ -1477,10 +1583,12 @@ if (len(fc_table) > 0) & (len(qr_table) > 0):
 
 # In[ ]:
 
+
 qr_table.dtypes
 
 
 # In[ ]:
+
 
 qr_table
 
@@ -1491,10 +1599,12 @@ qr_table
 
 # In[ ]:
 
+
 kabupro.columns
 
 
 # In[ ]:
+
 
 kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準'), 
            ['決算期', '期末', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(10)
@@ -1502,26 +1612,31 @@ kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '�
 
 # In[ ]:
 
+
 diff_test = kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準'), 
            ['決算期', '期末', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']]
 
 
 # In[ ]:
 
+
 diff_test
 
 
 # In[ ]:
+
 
 diff_test[['売上高差分', '営業利益差分', '経常利益差分', '純利益差分', '一株当り純利益差分']] = diff_test[['売上高', '営業利益', '経常利益', '純利益', '一株当り純利益']]
 
 
 # In[ ]:
 
+
 diff_test.index[1]
 
 
 # In[ ]:
+
 
 for count in range(diff_test.index[1], diff_test.index[1] + len(diff_test) - 1):
     if diff_test.loc[count, '決算期'] == diff_test.loc[count - 1, '決算期']:
@@ -1533,6 +1648,7 @@ for count in range(diff_test.index[1], diff_test.index[1] + len(diff_test) - 1):
 
 
 # In[ ]:
+
 
 diff_test[['決算期', '期末', '売上高差分', '営業利益差分', '経常利益差分', '純利益差分', '一株当り純利益差分', '情報公開日 (更新日)']]
 # 一株当り純利益差分が株探の１株益と揃わない
@@ -1547,10 +1663,12 @@ diff_test[['決算期', '期末', '売上高差分', '営業利益差分', '経�
 # 修正発表があった項目は上書きされてしまっていると思われる
 # In[ ]:
 
+
 tables[9]
 
 
 # In[ ]:
+
 
 # 財務テーブルの抽出 (上書き)
 bs_table = pd.DataFrame()
@@ -1565,20 +1683,24 @@ for idx, table in enumerate(tables):
 
 # In[ ]:
 
+
 bs_table
 
 
 # In[ ]:
+
 
 bs_mobile
 
 
 # In[ ]:
 
+
 bs_table.columns
 
 
 # In[ ]:
+
 
 # 財務実績データが無い場合、ダミーのデータフレームを作成
 if len(bs_table) == 0:
@@ -1589,11 +1711,13 @@ if len(bs_table) == 0:
 
 # In[ ]:
 
+
 # 全ての列項目がnullの行を除去
 bs_table = bs_table[~bs_table.isnull().all(axis=1)].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # モバイル版のデータを結合、無い場合はスキップ
 if (len(bs_table) == 0) & (len(bs_mobile) > 0):
@@ -1605,12 +1729,14 @@ elif len(bs_mobile) > 0:
 
 # In[ ]:
 
+
 # 予想値と前期比の行を除去
 bs_table['決算期'] = bs_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
 bs_table = bs_table[~((bs_table['決算期'].str.contains('予')) | (bs_table['決算期'].str.contains('前期比')))].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 決算期変更列を新規作成、決算期列から決算期と決算期変更を抽出、代入
 bs_table['決算期'] = bs_table['決算期'].astype(str) # 決算期列が float 型になっている場合に備え str 型を明示
@@ -1623,17 +1749,20 @@ for idx, end in bs_table['決算期'].iteritems():
 
 # In[ ]:
 
+
 # 決算期が 'yyyy.mm' 表記ではない行は確定決算前と思われるので削除
 bs_table = bs_table[bs_table['決算期'].str.contains('\d\d\d\d.\d\d')].reset_index(drop=True)
 
 
 # In[ ]:
 
+
 # 決算期が 1998.mm のデータは他のテーブルには無く、発表日も不自然なので行ごと削除
 # bs_table = bs_table[~bs_table['決算期'].str.contains('1998.\d\d')].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 通期業績には無い期間の行を削除
 if len(pl_table) > 0:
@@ -1643,6 +1772,7 @@ if len(pl_table) > 0:
 
 
 # In[ ]:
+
 
 # 日付のパース、datetime.dateへの型変換、最終的に '－'  は NaT に置換される
 # bs_table['決算期'] = bs_table['決算期'].apply(lambda x: datetime.strptime(x, '%Y.%m').date()) # 日付ではないので文字列のままの方がいいかも？
@@ -1657,6 +1787,7 @@ bs_table['発表日'] = pd.to_datetime(bs_table['発表日'], format='%Y-%m-%d')
 
 # In[ ]:
 
+
 # 決算期の同じ年の月が通期業績と異なる場合があるので、通期業績の決算期に置換
 # 決算期の変更があり、なおかつ決算期に「変」記載のない銘柄で確認 (1909)
 if len(pl_table) > 0:
@@ -1665,6 +1796,7 @@ if len(pl_table) > 0:
 
 
 # In[ ]:
+
 
 # 発表日の欠損値および異常値を通期業績の発表日に置換
 if len(pl_table) > 0:
@@ -1675,6 +1807,7 @@ if len(pl_table) > 0:
 
 # In[ ]:
 
+
 # 決算期変更の欠損値を通期業績の値に置換
 if len(pl_table) > 0:
     for idx, change in bs_table['決算期変更'].iteritems():
@@ -1683,6 +1816,7 @@ if len(pl_table) > 0:
 
 
 # In[ ]:
+
 
 # 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
 num_col = ('１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率')
@@ -1694,12 +1828,14 @@ for key in num_col:
 
 # In[ ]:
 
+
 # 型変換
 # 辞書内包表記による一括変換
 bs_table = bs_table.astype({x: float for x in ('１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率')})
 
 
 # In[ ]:
+
 
 # 100万円単位換算
 million_col = ('総資産', '自己資本', '剰余金')
@@ -1708,32 +1844,38 @@ bs_table.loc[:, million_col] = bs_table.loc[:, million_col].apply(lambda x: x * 
 
 # In[ ]:
 
+
 # 列の並び替え
 bs_table = bs_table[['発表日', '決算期', '１株純資産', '自己資本比率', '総資産', '自己資本', '剰余金', '有利子負債倍率', '会計基準', '決算期変更']]
 
 
 # In[ ]:
 
+
 bs_table.dtypes
 
 
 # In[ ]:
 
-bs_table
-
-
-# In[ ]:
 
 bs_table
 
 
 # In[ ]:
+
+
+bs_table
+
+
+# In[ ]:
+
 
 kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'] == '通期'), 
            ['連結個別', '決算期', '期首', '一株当り純資産', '総資産', '情報公開日 (更新日)']]
 
 
 # In[ ]:
+
 
 # 比較参照用
 kabupro.columns
@@ -1743,6 +1885,7 @@ kabupro.columns
 
 # In[ ]:
 
+
 tables[2]
 
 
@@ -1750,6 +1893,7 @@ tables[2]
 # 不要かな？
 # 百万単位
 # In[ ]:
+
 
 tables[5]
 
@@ -1760,10 +1904,12 @@ tables[5]
 # 百万単位
 # In[ ]:
 
+
 tables[6]
 
 
 # In[ ]:
+
 
 tables[6].columns
 
@@ -1775,10 +1921,12 @@ tables[6].columns
 # 百万単位
 # In[ ]:
 
+
 tables[7]
 
 
 # In[ ]:
+
 
 kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'] == '第2四半期'), 
            ['連結個別', '期首', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(3)
@@ -1786,16 +1934,19 @@ kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '�
 
 # In[ ]:
 
+
 kabupro.ix[(kabupro['証券コード'] == code)& (kabupro['会計基準'] == '米国基準') & (kabupro['決算期間'].isin(['第2四半期', '通期'])), # 
            ['連結個別', '期首', '決算期間', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(5)
 
 
 # In[ ]:
 
+
 tables[4].tail(1)
 
 
 # In[ ]:
+
 
 # 比較参照用
 kabupro.columns
@@ -1804,6 +1955,7 @@ kabupro.columns
 # # (準備) 単一銘柄の決算ページの取得
 
 # In[ ]:
+
 
 # 個別銘柄の決算ページを開く
 code = 1301 # トヨタ
@@ -1818,6 +1970,7 @@ print(browser.select('.kobetsu_data_table1_meigara')[0].text.strip())
 
 
 # In[ ]:
+
 
 # 個別銘柄の決算ページを開く
 code = 1301 # トヨタ
@@ -1835,25 +1988,30 @@ assert '決算' in browser.parsed.title.string
 
 # In[ ]:
 
+
 kessan_html = browser.find()
 
 
 # In[ ]:
+
 
 kessan_html
 
 
 # In[ ]:
 
+
 tables = pd.read_html(str(kessan_html), header=0)
 
 
 # In[ ]:
 
+
 tables[11]
 
 
 # In[ ]:
+
 
 # 後でhtml形式で読み込み可能なファイルとして書き出す方法
 kabutan_kessan = open('kabutan_kessan.html', 'w')
@@ -1863,6 +2021,7 @@ kabutan_kessan.close()
 
 # In[ ]:
 
+
 # 保存したhtmlファイルからの読み込み
 tables = pd.read_html('/Users/Really/Stockyard/kabutan_kessan.html', header=0)
 
@@ -1871,11 +2030,13 @@ tables = pd.read_html('/Users/Really/Stockyard/kabutan_kessan.html', header=0)
 
 # In[ ]:
 
+
 tables = pd.read_html(str(browser.select('table')), header=0)
 tables[11]
 
 
 # In[ ]:
+
 
 # 後でhtml形式で読み込み可能なファイルとして書き出す方法
 kabutan_kessan_tables = open('kabutan_kessan_tables.html', 'w')
@@ -1885,6 +2046,7 @@ kabutan_kessan_tables.close()
 
 # In[ ]:
 
+
 # 保存したhtmlファイルからの読み込み
 tables = pd.read_html('/Users/Really/Stockyard/kabutan_kessan_tables.html', header=0)
 
@@ -1892,6 +2054,7 @@ tables = pd.read_html('/Users/Really/Stockyard/kabutan_kessan_tables.html', head
 # # (準備) 全テーブル内容の確認
 
 # In[ ]:
+
 
 # 保存した html からテーブル属性を読み込み
 tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.format(code), header=0)
@@ -1920,11 +2083,13 @@ tables = pd.read_html('/Users/Really/Stockyard/_kabutan_html/kabutan_{0}.html'.f
 #  - 日経平均チャート切り替え
 # In[ ]:
 
+
 # ページ上部の主要指標情報 1-4の各項目と同じところっぽい
 tables[0]
 
 
 # In[ ]:
+
 
 # 主要指標情報 日経平均
 tables[1]
@@ -1932,11 +2097,13 @@ tables[1]
 
 # In[ ]:
 
+
 # 主要指標情報 米ドル円
 tables[2]
 
 
 # In[ ]:
+
 
 # 主要指標情報 ＮＹダウ (終値)
 tables[3]
@@ -1944,11 +2111,13 @@ tables[3]
 
 # In[ ]:
 
+
 # 主要指標情報 上海総合 (終値)
 tables[4]
 
 
 # In[ ]:
+
 
 # 検索窓
 tables[5]
@@ -1956,11 +2125,13 @@ tables[5]
 
 # In[ ]:
 
+
 # 銘柄概要
 tables[6]
 
 
 # In[ ]:
+
 
 # 銘柄概要
 tables[7]
@@ -1968,11 +2139,13 @@ tables[7]
 
 # In[ ]:
 
+
 # 銘柄概要
 tables[8]
 
 
 # In[ ]:
+
 
 # 銘柄概要
 tables[9]
@@ -1980,11 +2153,13 @@ tables[9]
 
 # In[ ]:
 
+
 # ＰＥＲ ＰＢＲ 利回り 信用倍率
 tables[10]
 
 
 # In[ ]:
+
 
 # 通期業績
 tables[11]
@@ -1993,11 +2168,13 @@ tables[11]
 
 # In[ ]:
 
+
 # 業績予想修正履歴
 tables[12]
 
 
 # In[ ]:
+
 
 # 不明
 tables[13]
@@ -2005,86 +2182,97 @@ tables[13]
 
 # In[ ]:
 
+
 # 修正履歴修正方向
 tables[14]
 
 
 # In[ ]:
 
+
 tables[15]
 
 
 # In[ ]:
+
 
 tables[16]
 
 
 # In[ ]:
 
+
 tables[17]
 
 
 # In[ ]:
+
 
 tables[18]
 
 
 # In[ ]:
 
+
 tables[19]
 
 
 # In[ ]:
+
 
 tables[20]
 
 
 # In[ ]:
 
+
 tables[21]
 
 
 # In[ ]:
+
 
 tables[22]
 
 
 # In[ ]:
 
+
 tables[23]
 
 
 # In[ ]:
+
 
 tables[24]
 
 
 # In[ ]:
 
+
 tables[25]
 
 
 # In[ ]:
+
 
 tables[26]
 
 
 # In[ ]:
 
+
 tables[27]
 
 
 # In[ ]:
+
 
 tables[28]
 
 
 # In[ ]:
 
+
 tables[29]
-
-
-# In[ ]:
-
-
 
