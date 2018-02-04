@@ -18,24 +18,6 @@ from sqlalchemy.types import Date, Integer, Float, Text
 
 
 class sql:
-    db_settings = {
-        "db": 'mysql', # ドライバーは mysqldb になる。mysqlclient のこと？
-        # "db": 'mysql+mysqlconnector',
-        # "db": 'mysql+pymysql',
-        # "host": 'localhost',
-        "host": '127.0.0.1',
-        # "host": 'MyCon',
-        # "database": 'StockPrice_Yahoo_1',
-        "database": 'stockyard',
-        "user": 'user',
-        "password": 'password',
-        "port": '3306',
-        "charset": '?charset=utf8mb4'
-    }
-    # engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
-    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}{charset}'.format(**db_settings))
-    
-    
     def write_price(self, code, price):
         table_name = 't_{0}'.format(code)
         # sqlalchemy.typesで定義されたデータ型を辞書形式で設定
@@ -48,18 +30,18 @@ class sql:
             'Volume': Integer(),
             'AdjClose': Float()
         }
-        price.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
+        price.to_sql(table_name, self.engine, if_exists='replace', dtype=dtype)
         # 主キーを設定
         # 参考 https://stackoverflow.com/questions/30867390/python-pandas-to-sql-how-to-create-a-table-with-a-primary-key
-        with sql.engine.connect() as con:
-            con.execute('ALTER TABLE `{0}` ADD PRIMARY KEY (`Date`);'.format(table_name))
+        with self.engine.connect() as con:
+            con.execute('ALTER TABLE "{0}" ADD PRIMARY KEY ("Date");'.format(table_name))
         
 
     def get_price(self, code):
         # table_name = 't_{0}'.format(code)
-        # result = pd.read_sql_table(table_name, sql.engine, index_col='Date')#.drop('index', axis=1)
+        # result = pd.read_sql_table(table_name, self.engine, index_col='Date')#.drop('index', axis=1)
         sql_query = 'SELECT * FROM t_{0}'.format(code)
-        result = pd.read_sql(sql_query, sql.engine, index_col='Date')
+        result = pd.read_sql(sql_query, self.engine, index_col='Date')
         result.index = pd.to_datetime(result.index)
         
         return result
@@ -73,31 +55,31 @@ class sql:
             'Date': Date(),
             'Open': Text()}
         
-        info.to_sql(table_name, sql.engine, if_exists='replace', dtype=dtype)
+        info.to_sql(table_name, self.engine, if_exists='replace', dtype=dtype)
         
         
     def get_info(self, table_name):
-        # result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        # result = pd.read_sql_table(table_name, self.engine, index_col=None).drop('index', axis=1)
         sql_query = 'SELECT * FROM {0}'.format(table_name)
-        result = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
+        result = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
         result['Date'] = pd.to_datetime(result['Date'])
         
         return result
     
     
     def get_yahoo_info(self):
-        # result = pd.read_sql_table(table_name, sql.engine, index_col=None).drop('index', axis=1)
+        # result = pd.read_sql_table(table_name, self.engine, index_col=None).drop('index', axis=1)
         sql_query = 'SELECT * FROM yahoo_info'
-        result = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
+        result = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
         result['Date'] = pd.to_datetime(result['Date'])
         
         return result
         
 
     def get_yahoo_stock_code(self, start_index=0, end_index=None):
-        # yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        # yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', self.engine, index_col=None).drop('index', axis=1)
         sql_query = 'SELECT * FROM yahoo_stock_table'
-        yahoo_stock_table = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
+        yahoo_stock_table = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
         
         if end_index == None:
             end_index = len(yahoo_stock_table)
@@ -108,9 +90,9 @@ class sql:
 
 
     def get_new_added_stock_code(self, start_index=0, end_index=None):
-        # new_added_stock_table = pd.read_sql_table('new_added_stock_table', sql.engine, index_col=None).drop('index', axis=1)
+        # new_added_stock_table = pd.read_sql_table('new_added_stock_table', self.engine, index_col=None).drop('index', axis=1)
         sql_query = 'SELECT * FROM new_added_stock_table'
-        new_added_stock_table = pd.read_sql(sql_query, sql.engine, index_col='index')#.drop('index', axis=1)
+        new_added_stock_table = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
         
         if end_index == None:
             end_index = len(new_added_stock_table)
@@ -121,25 +103,91 @@ class sql:
 
 
     def statement_query(self, sql_query):
-        result = pd.read_sql_query(sql_query, sql.engine, index_col=None)
+        result = pd.read_sql_query(sql_query, self.engine, index_col=None)
         # ex. df = sql.statement_query('SELECT code, name FROM domestic_stock_table')
         # テーブル全体ではなく抽出の場合、インデックスは無いらしく下記ではエラーになる
-        #result = pd.read_sql_query(statement, sql.engine, index_col=None).drop('index', axis=1)
+        #result = pd.read_sql_query(statement, self.engine, index_col=None).drop('index', axis=1)
         
         return result
     
     
     def write_table(self, table_name, table):
-        table.to_sql(table_name, sql.engine, if_exists='replace')
+        table.to_sql(table_name, self.engine, if_exists='replace')
         
     
     def read_table(self, table_name, index_col=None):
-        # result = pd.read_sql_table(table_name, sql.engine, index_col=index_col)
+        # result = pd.read_sql_table(table_name, self.engine, index_col=index_col)
         sql_query = 'SELECT * FROM {0}'.format(table_name)
-        result = pd.read_sql(sql_query, sql.engine, index_col=index_col)
+        result = pd.read_sql(sql_query, self.engine, index_col=index_col)
         
         return result
     
+    
+class msql(sql):    
+    db_settings = {
+        "db": 'mysql', # ドライバーは mysqldb になる。mysqlclient のこと？
+        # "db": 'mysql+mysqlconnector',
+        # "db": 'mysql+pymysql',
+        # "host": 'localhost',
+        "host": '127.0.0.1',
+        # "host": 'MyCon',
+        "database": 'stockyard',
+        "user": 'user',
+        "password": 'password',
+        "port": '3306',
+        "charset": '?charset=utf8mb4'
+    }
+    # engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}{charset}'.format(**db_settings))
+    
+    
+class psql(sql):    
+    db_settings = {
+        "db": 'postgresql', # デフォルトドライバーは psycopg2 になる。
+        "user": 'python',
+        "password": 'password',
+        "host": 'localhost',
+        "port": '5432',
+        "database": 'stockyard'
+    }
+    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+
+    
+def get_yahoo_stock_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+    yahoo_stock_table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+
+    if end_index == None:
+        end_index = len(yahoo_stock_table)
+
+    result = list(yahoo_stock_table['code'][start_index : end_index])
+
+    return result
+    
+    
+def get_new_added_stock_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+    new_added_stock_table = pd.read_csv('{0}/new_added_stock_table.csv'.format(csv_path), index_col=0)
+
+    if end_index == None:
+        end_index = len(new_added_stock_table)
+
+    result = list(new_added_stock_table['code'][start_index : end_index])
+
+    return result
+    
+    
+def get_yahoo_info(csv_path='D:\stockyard\_csv'):
+    result = pd.read_csv('{0}/yahoo_info.csv'.format(csv_path), index_col=0)
+    result['Date'] = pd.to_datetime(result['Date'])
+
+    return result
+
+    
+def get_yahoo_price(code, price_path='D:\stockyard\_yahoo_csv'):
+    result = pd.read_csv('{0}/t_{1}.csv'.format(price_path, code), index_col=0)
+    result.index = pd.to_datetime(result.index)
+
+    return result
+
     
 # 関数にretryデコレーターを付ける
 @retry(tries=5, delay=1, backoff=2)

@@ -75,7 +75,7 @@ pd.set_option('display.max_columns', 30)
 # In[ ]:
 
 
-sql = stock.sql()
+sql = stock.msql()
 
 
 # In[ ]:
@@ -254,8 +254,8 @@ sql.statement_query('select*from yahoo_fundamental')
 
 
 # # pandasから書き込み
-
-# __全体的に遅く処理速度が不安定。要調査、修正。__
+# 
+# __全体的に遅く処理速度が不安定。実用は難しい。__
 
 # In[ ]:
 
@@ -343,34 +343,30 @@ sql.read_table('test_table', 'index')
 
 # # 処理遅延の原因究明のための各種動作確認
 
-# In[ ]:
-
-
-df = sql.get_price(1301)
-
+# ## テーブルの読み込み
 
 # In[ ]:
 
 
-df
-
-
-# In[ ]:
-
-
-df.dtypes
-
-
-# In[ ]:
-
-
-type(df.index[0])
-
-
-# In[ ]:
-
-
-df.loc['2000-01-04']
+db_settings = {
+    # "db": 'mysql', # ドライバーは mysqldb になる。mysqlclient のこと？
+    # "db": 'mysql+mysqlconnector',
+    # "db": 'mysql+pymysql',
+    "db": 'postgresql',
+    "host": 'localhost',
+    # "host": '127.0.0.1',
+    # "host": 'MyCon',
+    # "database": 'StockPrice_Yahoo_1',
+    "database": 'stockyard',
+    "user": 'testuser',
+    "password": 'password',
+    "port": '5432'#,
+    # "charset": '?charset=utf8mb4'
+}
+# engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+# engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}{charset}'.format(**db_settings))
+engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+# engine = create_engine('postgresql://scott:tiger@localhost/mydatabase')
 
 
 # In[ ]:
@@ -393,19 +389,8 @@ df.dtypes
 type(df['Date'][0])
 
 
-# In[ ]:
-
-
-ds = df.loc[0]
-ds
-
-
-# In[ ]:
-
-
-dd = list(dict(df.iloc[0]))
-dd
-
+# ## 辞書のリストに変換してpandasを通さず書き込んでみる  
+# __→ 少しは速くなるけどやはり遅い__
 
 # In[ ]:
 
@@ -457,33 +442,8 @@ conn.close()
 sql.get_price(1002)
 
 
-# In[ ]:
-
-
-pd.read_csv(r"C:\Users\Really\GitHub\Stockyard\_csv\info.csv")
-
-
-# In[ ]:
-
-
-import MySQLdb
-
-conn = MySQLdb.connect(db='stockyard', user='user', passwd='password', charset='utf8mb4')
-
-c = conn.cursor()
-
-c.execute('SELECT * FROM t_1301')
-for row in c.fetchall():
-    print(row)
-    
-conn.close()
-
-
-# In[ ]:
-
-
-pd.read_sql_table('t_1301', conn, index_col='Date')
-
+# ## SQLAlchemy単体での読み込み (pandasには入れない)  
+# __→ 速いというほどではない__
 
 # In[ ]:
 
@@ -501,11 +461,8 @@ for v in sql_table:
    print(v)
 
 
-# In[ ]:
-
-
-get_ipython().run_cell_magic('writefile', 'sqlalchemy_test.py', '\nimport pandas as pd\nfrom sqlalchemy import create_engine\n\ndb_settings = {\n    # "host": \'localhost\',\n    # "host": \'127.0.0.1\',\n    "host": \'MyCon\',\n    # "database": \'StockPrice_Yahoo_1\',\n    "database": \'stockyard\',\n    "user": \'user\',\n    "password": \'password\',\n    "port":\'3306\'\n}\n# engine = create_engine(\'mysql://{user}:{password}@{host}:{port}/{database}\'.format(**db_settings))\n# engine = create_engine(\'mysql://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4\'.format(**db_settings))\n# engine = create_engine(\'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4\'.format(**db_settings))\nengine = create_engine(\'mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4\'.format(**db_settings))\n\nsql_table = pd.read_sql_table(\'t_1301\', engine, index_col=\'Date\')\nprint(sql_table)')
-
+# ## スクリプトにして実行してみる  
+# __→ 変わらず遅い__
 
 # In[ ]:
 
@@ -541,4 +498,121 @@ get_ipython().run_line_magic('lprun', '-T lprofo -f sql.get_price sql.get_price(
 
 
 print(open('lprofo', 'r').read())
+
+
+# # PostgreSQL で比較  
+# __→ これなら実用可能かも__
+
+# In[ ]:
+
+
+# PostgreSQL
+db_settings = {
+    "db": 'postgresql', # デフォルトドライバーは psycopg2 になる。
+    "user": 'python',
+    "password": 'password',
+    "host": 'localhost',
+    "port": '5432',
+    "database": 'stockyard'
+}
+engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
+
+
+# In[ ]:
+
+
+price = sql.get_price(1301)
+price
+
+
+# In[ ]:
+
+
+price.dtypes
+
+
+# In[ ]:
+
+
+price.index[0]
+
+
+# In[ ]:
+
+
+type(price.index[0])
+
+
+# In[ ]:
+
+
+price.loc['2000-01-04']
+
+
+# In[ ]:
+
+
+table_name = 't_1002'
+price.to_sql(table_name, engine, if_exists='replace')
+
+
+# In[ ]:
+
+
+psql_df = pd.read_sql_query("select*from t_1001", engine, index_col=None)
+psql_df = psql_df.set_index('Date')
+psql_df.index = pd.to_datetime(psql_df.index)
+psql_df
+
+
+# In[ ]:
+
+
+psql_df.dtypes
+
+
+# In[ ]:
+
+
+kt_1301 = sql.read_table('kt_1301', 'index')
+
+
+# In[ ]:
+
+
+table_name = 'kt_1301'
+kt_1301.to_sql(table_name, engine, if_exists='replace')
+
+
+# In[ ]:
+
+
+psql_kt = pd.read_sql_query("select*from kt_1301", engine, index_col='index')
+psql_kt
+
+
+# In[ ]:
+
+
+psql_kt.dtypes
+
+
+# In[ ]:
+
+
+dst = sql.read_table('domestic_stock_table', index_col='index')
+
+
+# In[ ]:
+
+
+table_name = 'domestic_stock_table'
+dst.to_sql(table_name, engine, if_exists='replace')
+
+
+# In[ ]:
+
+
+psql_dst = pd.read_sql_query("select*from domestic_stock_table", engine, index_col='index')
+psql_dst
 

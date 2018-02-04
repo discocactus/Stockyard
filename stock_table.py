@@ -1,6 +1,18 @@
 
 # coding: utf-8
 
+# In[ ]:
+
+
+# pandasのto_csvのデフォルトエンコーディングはUTF-8。
+# 書き出したファイルをpandasで読み込む場合は問題ない。
+# Excelで開こうとすると強制的にShift-JISで開こうとするので、日本語が文字化けするがいたしかたなし？
+# エンコーディングをUTF-8以外にするのは弊害が大きいような気がする。
+# Excelではファイルを開くのではなく、データのインポートを利用すればエンコードの指定が可能。
+# メモ帳等で開いて上書き保存すれば自動的にBOMが付加され、Excelもエンコードを認識するらしいが、
+# BOMを付けるのもExcel以外から開く際に弊害があるらしい。
+
+
 # # import
 
 # In[ ]:
@@ -12,14 +24,6 @@ import pandas.tseries.offsets as offsets
 import datetime as dt
 import time
 import importlib
-import logging
-from retry import retry
-#import traceback
-#from retrying import retry
-from sqlalchemy import create_engine
-from sqlalchemy.types import Date, Integer, Float, Text
-# from sqlalchemy.types import Integer
-# from sqlalchemy.types import Text
 
 import stock
 
@@ -37,18 +41,20 @@ importlib.reload(stock)
 pd.set_option('display.max_columns', 30)
 
 
-# # MySQLに接続
+# # パスの設定
 
 # In[ ]:
 
 
-sql = stock.sql()
+# jpx_path = '/Users/Really/Stockyard/_dl_data'
+jpx_path = 'D:\stockyard\_dl_data'
 
 
 # In[ ]:
 
 
-help(sql)
+# csv_path = '/Users/Really/Stockyard/_csv'
+csv_path = 'D:\stockyard\_csv'
 
 
 # # 上場一覧から各種テーブルを作成 (メインはyahoo_stock_table)
@@ -56,14 +62,14 @@ help(sql)
 # In[ ]:
 
 
-file_month = 1712
+file_month = 1801
 
 
 # In[ ]:
 
 
 # 東証のエクセルファイルを読み込む # http://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-all_stock_table = pd.read_excel('/Users/Really/Stockyard/_dl_data/data_j_{0}.xls'.format(file_month))
+all_stock_table = pd.read_excel('{0}/data_j_{1}.xls'.format(jpx_path, file_month))
 all_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'category_33', 'code_17', 'category_17', 'code_scale', 'scale'] # 列名を変更
 
 
@@ -84,21 +90,20 @@ all_stock_table.groupby('market').count()
 
 
 # 上場一覧のテーブル保存
-all_stock_table.to_csv('/Users/Really/Stockyard/_csv/all_stock_table.csv')
-sql.write_table('all_stock_table', all_stock_table)
-# all_stock_table.to_sql('all_stock_table', engine, if_exists='replace')
+all_stock_table.to_csv('{0}/all_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/all_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
 
 
 # PRO Marketを除いたテーブルの作成 (YahooにはPRO Marketのデータはない)
-yahoo_stock_table = all_stock_table.ix[~all_stock_table['market'].str.contains('PRO Market')].reset_index(drop=True)
-
-
-# In[ ]:
-
-
+yahoo_stock_table = all_stock_table.loc[~all_stock_table['market'].str.contains('PRO Market')].reset_index(drop=True)
 yahoo_stock_table
 
 
@@ -106,21 +111,20 @@ yahoo_stock_table
 
 
 # PRO Marketを除いたテーブルの保存
-yahoo_stock_table.to_csv('/Users/Really/Stockyard/_csv/yahoo_stock_table.csv')
-sql.write_table('yahoo_stock_table', yahoo_stock_table)
-# yahoo_stock_table.to_sql('yahoo_stock_table', engine, if_exists='replace')
+yahoo_stock_table.to_csv('{0}/yahoo_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
 
 
 # 内国株のテーブル作成
-domestic_stock_table = all_stock_table.ix[all_stock_table['market'].str.contains('内国株')].reset_index(drop=True)
-
-
-# In[ ]:
-
-
+domestic_stock_table = all_stock_table.loc[all_stock_table['market'].str.contains('内国株')].reset_index(drop=True)
 domestic_stock_table
 
 
@@ -128,9 +132,13 @@ domestic_stock_table
 
 
 # 内国株のテーブル保存
-domestic_stock_table.to_csv('/Users/Really/Stockyard/_csv/domestic_stock_table.csv')
-sql.write_table('domestic_stock_table', domestic_stock_table)
-# domestic_stock_table.to_sql('domestic_stock_table', engine, if_exists='replace')
+domestic_stock_table.to_csv('{0}/domestic_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/domestic_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
@@ -150,10 +158,6 @@ ex_stock_table = yahoo_stock_table[~yahoo_stock_table['code'].isin(domestic_stoc
 # 上はつまり下の書き方と同じこと。
 # ex_stock_table = all_stock_table.ix[all_stock_table['market'].str.contains('[^）t]$')].reset_index(drop=True)
 
-
-# In[ ]:
-
-
 ex_stock_table
 
 
@@ -168,21 +172,20 @@ ex_stock_table.groupby('market').count()
 
 
 # 内国株, PRO Market 以外のテーブル保存
-ex_stock_table.to_csv('/Users/Really/Stockyard/_csv/ex_stock_table.csv')
-sql.write_table('ex_stock_table', ex_stock_table)
-# ex_stock_table.to_sql('ex_stock_table', engine, if_exists='replace')
+ex_stock_table.to_csv('{0}/ex_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/ex_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
 
 
 # 外国株のテーブル作成
-foreign_stock_table = all_stock_table.ix[all_stock_table['market'].str.contains('外国株')].reset_index(drop=True)
-
-
-# In[ ]:
-
-
+foreign_stock_table = all_stock_table.loc[all_stock_table['market'].str.contains('外国株')].reset_index(drop=True)
 foreign_stock_table
 
 
@@ -190,8 +193,13 @@ foreign_stock_table
 
 
 # 外国株のテーブル保存
-foreign_stock_table.to_csv('/Users/Really/Stockyard/_csv/foreign_stock_table.csv')
-sql.write_table('foreign_stock_table', foreign_stock_table)
+foreign_stock_table.to_csv('{0}/foreign_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/foreign_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
@@ -199,11 +207,11 @@ sql.write_table('foreign_stock_table', foreign_stock_table)
 
 # 型の確認
 pd.DataFrame([
-    sql.read_table('all_stock_table').dtypes,
-    sql.read_table('yahoo_stock_table').dtypes,
-    sql.read_table('domestic_stock_table').dtypes,
-    sql.read_table('ex_stock_table').dtypes,
-    sql.read_table('foreign_stock_table').dtypes],
+    pd.read_csv('{0}/all_stock_table.csv'.format(csv_path), index_col=0).dtypes,
+    pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0).dtypes,
+    pd.read_csv('{0}/domestic_stock_table.csv'.format(csv_path), index_col=0).dtypes,
+    pd.read_csv('{0}/ex_stock_table.csv'.format(csv_path), index_col=0).dtypes,
+    pd.read_csv('{0}/foreign_stock_table.csv'.format(csv_path), index_col=0).dtypes],
     index=['all', 'yahoo', 'domestic', 'ex', 'foreign'])
 
 
@@ -214,14 +222,15 @@ pd.DataFrame([
 # In[ ]:
 
 
-file_month = 1712
+new_file_month = 1801
+old_file_month = 1712
 
 
 # In[ ]:
 
 
 # 東証のエクセルファイルを読み込む # http://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-new_stock_table = pd.read_excel('/Users/Really/Stockyard/_dl_data/data_j_{0}.xls'.format(file_month))
+new_stock_table = pd.read_excel('{0}/data_j_{1}.xls'.format(jpx_path, new_file_month))
 new_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'category_33', 'code_17', 'category_17', 'code_scale', 'scale'] # 列名を変更
 
 
@@ -240,8 +249,8 @@ new_stock_table.dtypes
 # In[ ]:
 
 
-# 旧テーブルの読み込み # http://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-old_stock_table = pd.read_excel('/Users/Really/Stockyard/_dl_data/data_j_{0}.xls'.format(file_month - 1))
+# 旧エクセルファイルの読み込み
+old_stock_table = pd.read_excel('{0}/data_j_{1}.xls'.format(jpx_path, old_file_month))
 old_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'category_33', 'code_17', 'category_17', 'code_scale', 'scale'] # 列名を変更
 
 
@@ -264,11 +273,6 @@ old_stock_table.dtypes
 
 # 新規上場銘柄のテーブル作成
 new_added = new_stock_table[~new_stock_table['code'].isin(old_stock_table['code'])].reset_index(drop=True)
-
-
-# In[ ]:
-
-
 new_added
 
 
@@ -276,21 +280,20 @@ new_added
 
 
 # 新規上場銘柄のテーブル保存
-new_added.to_csv('/Users/Really/Stockyard/_csv/new_added_stock_table.csv')
-sql.write_table('new_added_stock_table', new_added)
-# new_added.to_sql('new_added', engine, if_exists='replace')
+new_added.to_csv('{0}/new_added_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/new_added_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # In[ ]:
 
 
 # 新規上場銘柄の履歴テーブルの読み込み
-saved_added = sql.read_table('added_stock_table')
-
-
-# In[ ]:
-
-
+saved_added = pd.read_csv('{0}/added_stock_table.csv'.format(csv_path), index_col=0)
 saved_added
 
 
@@ -305,11 +308,6 @@ saved_added.dtypes
 
 # 新旧テーブルの連結
 added_stock_table = saved_added.append(new_added).reset_index(drop=True)
-
-
-# In[ ]:
-
-
 added_stock_table
 
 
@@ -323,9 +321,13 @@ added_stock_table.dtypes
 
 
 # 新規上場銘柄の履歴テーブル保存
-added_stock_table.to_csv('/Users/Really/Stockyard/_csv/added_stock_table.csv')
-sql.write_table('added_stock_table', added_stock_table)
-# added_stock_table.to_sql('added_stock_table', engine, if_exists='replace')
+added_stock_table.to_csv('{0}/added_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/added_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # ## 上場廃止銘柄
@@ -335,11 +337,6 @@ sql.write_table('added_stock_table', added_stock_table)
 
 # 上場廃止銘柄のテーブル作成
 new_discontinued = old_stock_table[~old_stock_table['code'].isin(new_stock_table['code'])].reset_index(drop=True)
-
-
-# In[ ]:
-
-
 new_discontinued
 
 
@@ -347,12 +344,7 @@ new_discontinued
 
 
 # 上場廃止銘柄の履歴テーブルの読み込み
-saved_discontinued = sql.read_table('discontinued_stock_table')
-
-
-# In[ ]:
-
-
+saved_discontinued = pd.read_csv('{0}/discontinued_stock_table.csv'.format(csv_path), index_col=0)
 saved_discontinued
 
 
@@ -367,11 +359,6 @@ saved_discontinued.dtypes
 
 # 新旧テーブルの連結
 discontinued_stock_table = saved_discontinued.append(new_discontinued).reset_index(drop=True)
-
-
-# In[ ]:
-
-
 discontinued_stock_table
 
 
@@ -384,10 +371,14 @@ discontinued_stock_table.dtypes
 # In[ ]:
 
 
-# 上場廃止銘柄のテーブル保存
-discontinued_stock_table.to_csv('/Users/Really/Stockyard/_csv/discontinued_stock_table.csv')
-sql.write_table('discontinued_stock_table', discontinued_stock_table)
-# discontinued_stock_table.to_sql('discontinued_stock_table', engine, if_exists='replace')
+# 上場廃止銘柄の履歴テーブル保存
+discontinued_stock_table.to_csv('{0}/discontinued_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/discontinued_stock_table.csv'.format(csv_path), index_col=0)
 
 
 # # 連続読み込み用コードリストの作成例
@@ -397,11 +388,11 @@ sql.write_table('discontinued_stock_table', discontinued_stock_table)
 # In[ ]:
 
 
-start_index = 3100
-increase_number = 100
+start_index = 0
+increase_number = 10
 end_index = start_index + increase_number
 
-reading_code = sql.get_yahoo_stock_code(start_index, end_index)
+reading_code = stock.get_yahoo_stock_code(start_index, end_index)
 print(reading_code[-10:])
 print('Next start from {0}'.format(start_index + increase_number))
 
@@ -411,42 +402,6 @@ print('Next start from {0}'.format(start_index + increase_number))
 # In[ ]:
 
 
-reading_code = sql.get_new_added_stock_code()
+reading_code = stock.get_new_added_stock_code()
 reading_code
-
-
-# # クラス不使用版コード
-
-# ## MySQLに接続
-
-# In[ ]:
-
-
-db_settings = {
-    "host": 'localhost',
-    # "database": 'StockPrice_Yahoo_1',
-    "database": 'stockyard',
-    "user": 'user',
-    "password": 'password',
-    "port":'3306'
-}
-engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
-
-
-# ## 読み込む内国株のコードリスト作成 (クラス不使用版)
-
-# In[ ]:
-
-
-# 内国株だけにする
-# MySQLに保存済みの内国株テーブルから作成。今後はこちらを使用する
-yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', engine, index_col=None).drop('index', axis=1)
-
-start_index = 2810
-increase_number = 10
-end_index = start_index + increase_number
-
-reading_code = list(yahoo_stock_table['code'][start_index : end_index])
-print(reading_code[-10:])
-print('Next start from {0}'.format(start_index + increase_number))
 
