@@ -3,6 +3,7 @@
 
 # In[ ]:
 
+
 import re
 import itertools
 
@@ -11,10 +12,12 @@ import itertools
 
 # In[ ]:
 
+
 re.findall(r'(\d+|\D+)', "ab123d45fgh67")
 
 
 # In[ ]:
+
 
 [''.join(it) for _, it in itertools.groupby("ab123d45fgh67", str.isdigit)]
 
