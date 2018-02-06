@@ -2,6 +2,8 @@ from scrapy.exceptions import DropItem
 
 from pymongo import MongoClient
 import MySQLdb
+import csv
+import re
 
 
 class ValidationPipeline(object):
@@ -103,6 +105,47 @@ class MySQLPipeline(object):
             dict(item))
         self.conn.commit()  # 変更をコミット。
         return item
+
+
+class csvPipeline(object):
+    """
+    Itemをcsvに保存するPipeline。
+    """
+
+    def open_spider(self, spider):
+        """
+        Spiderの開始時にMySQLサーバーに接続する。
+        itemsテーブルが存在しない場合は作成する。
+        """
+
+        try:
+            with open('yahoo_fundamental.csv', 'x', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, ['code', '銘柄名', 'PER', 'PBR', 'EPS', 'BPS'])
+                writer.writeheader()
+        except:
+            print('\n\nFile exists: yahoo_fundamental.csv\n\n')
+
+    def close_spider(self, spider):
+        """
+        Spiderの終了時にMySQLサーバーへの接続を切断する。
+        """
+
+    def process_item(self, item, spider):
+        """
+        Itemをitemsテーブルに挿入する。
+        """
+        dict_item = dict(item)
+        for key in dict_item:
+            dict_item[key] = re.sub('\n', '', dict_item[key])
+        print('\nprint(dict_item)\n')
+        print(dict_item)
+        print('\nend\n')
+        with open('yahoo_fundamental.csv', 'a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, ['code', '銘柄名', 'PER', 'PBR', 'EPS', 'BPS'])
+            writer.writerows([dict_item])
+
+        return item
+
 
 """
 日時

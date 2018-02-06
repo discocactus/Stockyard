@@ -73,7 +73,8 @@ DOWNLOAD_DELAY = 1
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
 #    'scrapy_project.pipelines.ScrapyProjectPipeline': 300,
-    'scrapy_project.pipelines.MySQLPipeline': 800,
+#    'scrapy_project.pipelines.MySQLPipeline': 800,
+    'scrapy_project.pipelines.csvPipeline': 800,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
