@@ -114,8 +114,7 @@ class csvPipeline(object):
 
     def open_spider(self, spider):
         """
-        Spiderの開始時にMySQLサーバーに接続する。
-        itemsテーブルが存在しない場合は作成する。
+        Spiderの開始時に'yahoo_fundamental.csv'が存在しない場合は作成する。
         """
 
         try:
@@ -127,19 +126,19 @@ class csvPipeline(object):
 
     def close_spider(self, spider):
         """
-        Spiderの終了時にMySQLサーバーへの接続を切断する。
+        Spiderの終了時の動作。
         """
 
     def process_item(self, item, spider):
         """
-        Itemをitemsテーブルに挿入する。
+        Itemをファイルに挿入する。
         """
         dict_item = dict(item)
         for key in dict_item:
             dict_item[key] = re.sub('\n', '', dict_item[key])
-        print('\nprint(dict_item)\n')
+        print('\n - dict_item - \n')
         print(dict_item)
-        print('\nend\n')
+        print('\n - end - \n')
         with open('yahoo_fundamental.csv', 'a', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, ['code', '銘柄名', 'PER', 'PBR', 'EPS', 'BPS'])
             writer.writerows([dict_item])
