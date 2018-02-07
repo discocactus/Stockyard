@@ -119,7 +119,35 @@ class csvPipeline(object):
 
         try:
             with open('yahoo_fundamental.csv', 'x', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, ['code', '銘柄名', 'PER', 'PBR', 'EPS', 'BPS'])
+                writer = csv.DictWriter(f, ['date',
+                                            'code',
+                                            'name',
+                                            'p_close',
+                                            'open',
+                                            'high',
+                                            'low',
+                                            'close',
+                                            'volume',
+                                            '売買代金',
+                                            '値幅制限',
+                                            '時価総額_百万円',
+                                            '発行済株式数',
+                                            '配当利回り',
+                                            '配当',
+                                            'per',
+                                            'pbr',
+                                            'eps',
+                                            'bps',
+                                            '最低購入代金',
+                                            '単元株数',
+                                            '年初来高値',
+                                            '年初来安値',
+                                            '信用買残',
+                                            '信用買残前週比',
+                                            '信用売残',
+                                            '信用売残前週比',
+                                            '貸借倍率'
+                                            ])
                 writer.writeheader()
         except:
             print('\n\nFile exists: yahoo_fundamental.csv\n\n')
@@ -140,41 +168,35 @@ class csvPipeline(object):
         print(dict_item)
         print('\n - end - \n')
         with open('yahoo_fundamental.csv', 'a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, ['code', '銘柄名', 'PER', 'PBR', 'EPS', 'BPS'])
+            writer = csv.DictWriter(f, ['date',
+                                        'code',
+                                        'name',
+                                        'p_close',
+                                        'open',
+                                        'high',
+                                        'low',
+                                        'close',
+                                        'volume',
+                                        '売買代金',
+                                        '値幅制限',
+                                        '時価総額_百万円',
+                                        '発行済株式数',
+                                        '配当利回り',
+                                        '配当',
+                                        'per',
+                                        'pbr',
+                                        'eps',
+                                        'bps',
+                                        '最低購入代金',
+                                        '単元株数',
+                                        '年初来高値',
+                                        '年初来安値',
+                                        '信用買残',
+                                        '信用買残前週比',
+                                        '信用売残',
+                                        '信用売残前週比',
+                                        '貸借倍率'
+                                        ])
             writer.writerows([dict_item])
 
         return item
-
-
-"""
-日時
-コード
-銘柄名
-
-前日終値 Previous Close
-始値
-高値
-安値
-出来高 Volume
-売買代金
-値幅制限
-
-時価総額 Market Cap
-発行済株式数
-配当利回り Forward Dividend & Yield ?
-1株配当
-PER
-PBR
-EPS
-BPS
-最低購入代金
-単元株数
-年初来高値
-年初来安値
-
-信用買残
-前週比
-信用売残
-前週比
-貸借倍率
-"""
