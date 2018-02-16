@@ -73,6 +73,7 @@
 
 # In[ ]:
 
+
 # import
 import sys
 import os
@@ -96,16 +97,19 @@ import stock
 
 # In[ ]:
 
+
 importlib.reload(stock)
 
 
 # In[ ]:
+
 
 # pandas の最大表示列数を設定 (max_rows で表示行数の設定も可能)
 pd.set_option('display.max_columns', 30)
 
 
 # In[ ]:
+
 
 sql = stock.sql()
 
@@ -114,25 +118,30 @@ sql = stock.sql()
 
 # In[ ]:
 
+
 table_name = 'kabupro_kessan'
 
 
 # In[ ]:
+
 
 kabupro = sql.read_table(table_name)
 
 
 # In[ ]:
 
+
 kabupro
 
 
 # In[ ]:
 
+
 kabupro.columns
 
 
 # In[ ]:
+
 
 kabupro.ix[14]
 # 株プロにしか無い項目: 希薄化後一株当り純利益, 純資産又は株主資本, 営業キャッシュフロー, 投資キャッシュフロー, 財務キャッシュフロー
@@ -142,6 +151,7 @@ kabupro.ix[14]
 
 # In[ ]:
 
+
 # 2017年11月分東証銘柄一覧のエクセルファイルを読み込む # http://www.jpx.co.jp/markets/statistics-equities/misc/01.html
 all_stock_table = pd.read_excel('/Users/Really/Stockyard/_dl_data/data_j_1711.xls')
 all_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'category_33', 'code_17', 'category_17', 'code_scale', 'scale'] # 列名を変更
@@ -149,11 +159,13 @@ all_stock_table.columns = ['date', 'code', 'name', 'market', 'code_33', 'categor
 
 # In[ ]:
 
+
 # 内国株のテーブル作成
 domestic_stock_table = all_stock_table.ix[all_stock_table['market'].str.contains('内国株')].reset_index(drop=True)
 
 
 # In[ ]:
+
 
 # 表示
 domestic_stock_table
@@ -161,10 +173,12 @@ domestic_stock_table
 
 # In[ ]:
 
+
 code_list = list(domestic_stock_table['code'])
 
 
 # In[ ]:
+
 
 # 伊藤園第1種優先株式を削除
 # 要素の値を直接指定して削除することができる
@@ -173,15 +187,18 @@ code_list.remove(25935)
 
 # In[ ]:
 
+
 code_list[-10:]
 
 
 # In[ ]:
 
+
 len(code_list)
 
 
 # In[ ]:
+
 
 start_index = 2500
 increase_number = 5
@@ -198,10 +215,12 @@ print('Next start from {0}'.format(start_index + increase_number))
 
 # In[ ]:
 
+
 code = 1301 # 1909
 
 
 # In[ ]:
+
 
 # 失敗分再実行用
 reading_code = failed
@@ -210,12 +229,14 @@ reading_code
 
 # In[ ]:
 
+
 # 失敗分再実行用
 reading_code = failed_table
 reading_code
 
 
 # In[ ]:
+
 
 # 列不足分再実行用
 reading_code = shorter_table
@@ -229,6 +250,7 @@ reading_code
 # 3995 四半期業績テーブルがない
 
 # In[ ]:
+
 
 # ---- 読み込み、整形、結合、書き込み、連続処理 ---- #
 
@@ -652,16 +674,19 @@ logging.info('{0} kabutan_merge Finished'.format(dt.datetime.now().strftime('%Y-
 
 # In[ ]:
 
+
 failed
 
 
 # In[ ]:
+
 
 # 失敗分をCSVに書き込み
 pd.Series(failed).to_csv('/Users/Really/Stockyard/_csv/kabutan_merge_failed.csv')
 
 
 # In[ ]:
+
 
 # 失敗分CSVをリスト化して読み込み
 failed_table = list(pd.read_csv('/Users/Really/Stockyard/_csv/kabutan_merge_failed.csv', header=None, index_col=0).values.flatten())
@@ -670,15 +695,18 @@ failed_table
 
 # In[ ]:
 
+
 merged_table
 
 
 # In[ ]:
 
+
 merged_table.columns
 
 
 # In[ ]:
+
 
 # 大量に回さないように注意 !!
 for code in reading_code:
@@ -689,6 +717,7 @@ for code in reading_code:
 
 
 # In[ ]:
+
 
 # 大量に回さないように注意 !!
 reading_code = [3995, 3975, 7196, 7810, 9262]
@@ -710,6 +739,7 @@ append_table
 
 # In[ ]:
 
+
 display(pl_table)
 display(bs_table)
 display(fc_table)
@@ -718,6 +748,7 @@ display(qr_table)
 
 
 # In[ ]:
+
 
 shorter_table = []
 for code in reading_code:
@@ -732,16 +763,19 @@ for code in reading_code:
 
 # In[ ]:
 
+
 shorter_table
 
 
 # In[ ]:
+
 
 # 業績予想列不足分をCSVに書き込み
 pd.Series(shorter_table).to_csv('/Users/Really/Stockyard/_csv/kabutan_merge_shorter_table.csv')
 
 
 # In[ ]:
+
 
 # 業績予想列不足分CSVをリスト化して読み込み
 shorter_table = list(pd.read_csv('/Users/Really/Stockyard/_csv/kabutan_merge_shorter_table.csv', header=None, index_col=0).values.flatten())
@@ -752,11 +786,13 @@ shorter_table
 
 # In[ ]:
 
+
 # 通期業績 & 財務
 pl_bs= pd.merge(pl_table, bs_table, on=['発表日', '決算期', '会計基準', '決算期変更'], how='outer').sort_values(['発表日', '決算期'])
 
 
 # In[ ]:
+
 
 # 通期業績 & 予想
 pl_fc = pd.merge(pl_table, fc_table, on=['発表日', '決算期', '会計基準', '決算期変更'], how='outer').sort_values(['発表日', '決算期'])
@@ -764,10 +800,12 @@ pl_fc = pd.merge(pl_table, fc_table, on=['発表日', '決算期', '会計基準
 
 # In[ ]:
 
+
 pl_fc.columns
 
 
 # In[ ]:
+
 
 pl_fc = pl_fc[['発表日', '決算期',
                  '予想売上高', '売上高', '予想営業益', '営業益', '予想経常益', '経常益', '予想最終益', '最終益', '１株益', '予想修正配当', '１株配', 
@@ -776,10 +814,12 @@ pl_fc = pl_fc[['発表日', '決算期',
 
 # In[ ]:
 
+
 pl_fc
 
 
 # In[ ]:
+
 
 # 通期業績 + 財務
 merged_table = pd.merge(pl_table, bs_table, on=['発表日', '決算期', '会計基準', '決算期変更'], how='outer').sort_values(['発表日', '決算期'])
@@ -801,45 +841,48 @@ for idx, value in merged_table['分割併合'].iteritems():
 
 # In[ ]:
 
+
 merged_table.columns
 
 
 # In[ ]:
+
 
 merged_table
 
 
 # In[ ]:
 
+
 merged_table.dtypes
 
 
 # In[ ]:
+
 
 sql.write_table('kt_{0}'.format(code), merged_table)
 
 
 # In[ ]:
 
+
 table_sql = sql.read_table('kt_{0}'.format(code))
 
 
 # In[ ]:
+
 
 table_sql
 
 
 # In[ ]:
 
+
 table_sql.dtypes
 
 
 # In[ ]:
 
+
 merged_table.to_csv('/Users/Really/Stockyard/_kabutan_csv/kt_{0}.csv'.format(code))
-
-
-# In[ ]:
-
-
 

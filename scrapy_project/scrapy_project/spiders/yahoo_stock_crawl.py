@@ -4,6 +4,8 @@
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+import re
+from datetime import datetime
 
 from scrapy_project.items import yahoo_fundamental
 
@@ -30,15 +32,15 @@ class yahoo_stock_crawl_spider(CrawlSpider):
         """
         item = yahoo_fundamental()  # yahoo_fundamental オブジェクトを作成
 
-        item['date'] = response.css('dd.yjSb:nth-child(3) > span:nth-child(1)').xpath('string()').extract_first() # date
+        item['date'] = response.css('#stockinf span').xpath('string()').extract()[0] # date
         item['code'] = response.css('#stockinf dt').xpath('string()').extract_first() # 銘柄コード
-        item['name'] = response.css('.symbol').xpath('string()').extract_first() # 銘柄名
+        item['name'] = response.css('#stockinf h1').xpath('string()').extract_first() # 銘柄名
 
         item['p_close'] = response.css('#detail strong').xpath('string()').extract()[2] # 前日終値
         item['open'] = response.css('#detail strong').xpath('string()').extract()[3] # 始値
         item['high'] = response.css('#detail strong').xpath('string()').extract()[4] # 高値
         item['low'] = response.css('#detail strong').xpath('string()').extract()[5] # 安値
-        item['close'] = response.css('td.stoksPrice:nth-child(3)').xpath('string()').extract_first() # 終値
+        item['close'] = response.css('#stockinf td').xpath('string()').extract()[1] # 終値
         item['volume'] = response.css('#detail strong').xpath('string()').extract()[6] # 出来高
         item['売買代金'] = response.css('#detail strong').xpath('string()').extract()[7] # 売買代金
         item['値幅制限'] = response.css('#detail strong').xpath('string()').extract()[8] # 値幅制限
@@ -57,10 +59,21 @@ class yahoo_stock_crawl_spider(CrawlSpider):
         item['年初来安値'] = response.css('#rfindex strong').xpath('string()').extract()[11] # 年初来安値
 
         item['信用買残'] = response.css('#margin strong').xpath('string()').extract()[0] # 信用買残
-        item['信用買残前週比'] = response.css('#margin strong').xpath('string()').extract()[1]  # 信用買残前週比
-        item['信用売残'] = response.css('#margin strong').xpath('string()').extract()[3]  # 信用売残
-        item['信用売残前週比'] = response.css('#margin strong').xpath('string()').extract()[4]  # 信用売残前週比
-        item['貸借倍率'] = response.css('#margin strong').xpath('string()').extract()[2]  # 貸借倍率
+        item['信用買残前週比'] = response.css('#margin strong').xpath('string()').extract()[1] # 信用買残前週比
+        item['信用売残'] = response.css('#margin strong').xpath('string()').extract()[3] # 信用売残
+        item['信用売残前週比'] = response.css('#margin strong').xpath('string()').extract()[4] # 信用売残前週比
+        item['貸借倍率'] = response.css('#margin strong').xpath('string()').extract()[2] # 貸借倍率
+
+        item['get'] = datetime.now().strftime("%Y/%m/%d %H:%M:%S") # 取得日時
+
+        for key in item:
+            item[key] = re.sub('\n', '', item[key])
+
+        print('\n - print item - \n')
+        for key in item:
+            print('{0}: {1}'.format(key, item[key]))
+        print('\n - print item end - \n')
+
         yield item  # Itemをyieldして、データを抽出する
 
 

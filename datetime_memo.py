@@ -7,6 +7,7 @@
 
 # In[ ]:
 
+
 import datetime
 
 today = datetime.date.today()
@@ -45,6 +46,7 @@ print(todaydetail.strftime("%Y/%m/%d %H:%M:%S"))
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime.now().strftime("%Y/%m/%d %H:%M:%S")
@@ -54,6 +56,7 @@ datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime.now()	# datetime.datetime(2014, 1, 2, 3, 4, 5, 000000)
@@ -62,6 +65,7 @@ datetime.now()	# datetime.datetime(2014, 1, 2, 3, 4, 5, 000000)
 # ### datetimeオブジェクトを加算する
 
 # In[ ]:
+
 
 from datetime import datetime, timedelta
 
@@ -79,6 +83,7 @@ datetime(2014,1,2,3,4,5) + timedelta(microseconds=1) # datetime.datetime(2014, 1
 
 # In[ ]:
 
+
 from datetime import datetime, timedelta
 
 datetime(2014,1,2,3,4,5) # datetime.datetime(2014, 1, 2, 3, 4, 5)
@@ -95,6 +100,7 @@ datetime(2014,1,2,3,4,5) + timedelta(microseconds=-1) # datetime.datetime(2014, 
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime(2014,1,2,3,4,5).year # 2014
@@ -108,6 +114,7 @@ datetime(2014,1,2,3,4,5).second # 5
 # ### datetimeオブジェクト → 文字列
 
 # In[ ]:
+
 
 from datetime import datetime
 
@@ -137,6 +144,7 @@ datetime(2014,1,2,3,4,5).strftime('%s') # 1388599445	unixtime
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime.strptime('2014-01-02 03:04:05', '%Y-%m-%d %H:%M:%S') # datetime.datetime(2014, 1, 2, 4, 3, 5)
@@ -145,6 +153,7 @@ datetime.strptime('2014-01-02 03:04:05', '%Y-%m-%d %H:%M:%S') # datetime.datetim
 # ### datetimeオブジェクト → unixtime
 
 # In[ ]:
+
 
 from datetime import datetime
 
@@ -155,6 +164,7 @@ datetime(2014,1,2,3,4,5).strftime('%s') # 1388599445
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime.fromtimestamp(1388599445) # datetime.datetime(2014, 1, 2, 4, 3, 5)
@@ -164,6 +174,7 @@ datetime.fromtimestamp(1388599445) # datetime.datetime(2014, 1, 2, 4, 3, 5)
 
 # In[ ]:
 
+
 from datetime import datetime
 
 datetime(2014,1,2,3,4,5).date() # datetime.date(2014, 1, 2)
@@ -172,6 +183,7 @@ datetime(2014,1,2,3,4,5).date() # datetime.date(2014, 1, 2)
 # ### datetimeオブジェクト → timeオブジェクト
 
 # In[ ]:
+
 
 from datetime import datetime
 
@@ -255,10 +267,12 @@ datetime(2014,1,2,3,4,5).time() # datetime.time(3, 4, 5)
 
 # In[ ]:
 
+
 from datetime import datetime, date, timezone, timedelta
 
 
 # In[ ]:
+
 
 # NG
 datetime(2016, 7)
@@ -266,35 +280,42 @@ datetime(2016, 7)
 
 # In[ ]:
 
+
 datetime(2016, 7, 5)
 
 
 # In[ ]:
+
 
 datetime(2016, 7, 5, 13)
 
 
 # In[ ]:
 
+
 datetime(2016, 7, 5, 13, 45)
 
 
 # In[ ]:
+
 
 datetime(2016, 7, 5, 13, 45, 27)
 
 
 # In[ ]:
 
+
 datetime(2016, 7, 5, 13, 45, 27, 123456)
 
 
 # In[ ]:
 
+
 datetime(2016, 7, 5, 13, 45, 27, 123456, timezone(timedelta(hours=+9)))
 
 
 # In[ ]:
+
 
 # NG
 date(2016, 7)
@@ -302,10 +323,12 @@ date(2016, 7)
 
 # In[ ]:
 
+
 date(2016, 7, 5)
 
 
 # In[ ]:
+
 
 # NG
 date(2016, 7, 5, 0)
@@ -318,10 +341,12 @@ date(2016, 7, 5, 0)
 
 # In[ ]:
 
+
 datetime.fromtimestamp(12345678901.234567)
 
 
 # In[ ]:
+
 
 date.fromtimestamp(12345678901.234567)
 
@@ -338,16 +363,19 @@ date.fromtimestamp(12345678901.234567)
 
 # In[ ]:
 
+
 from datetime import datetime, date
 
 
 # In[ ]:
+
 
 dt = datetime.now()
 dt
 
 
 # In[ ]:
+
 
 dt.date()
 
@@ -359,15 +387,18 @@ dt.date()
 
 # In[ ]:
 
+
 from datetime import datetime, date
 
 
 # In[ ]:
 
+
 datetime.now()
 
 
 # In[ ]:
+
 
 date.today()
 
@@ -377,10 +408,12 @@ date.today()
 
 # In[ ]:
 
+
 import time
 
 
 # In[ ]:
+
 
 time.time()
 
@@ -395,15 +428,18 @@ time.time()
 
 # In[ ]:
 
+
 from datetime import datetime, timezone, timedelta
 
 
 # In[ ]:
 
+
 datetime.strptime("2016/07/05 13:45:06", "%Y/%m/%d %H:%M:%S")
 
 
 # In[ ]:
+
 
 # NG
 datetime.strptime("2016/07/05 13:45", "%Y/%m/%d %H:%M:%S")
@@ -413,30 +449,36 @@ datetime.strptime("2016/07/05 13:45", "%Y/%m/%d %H:%M:%S")
 
 # In[ ]:
 
+
 from dateutil.parser import parse
 
 
 # In[ ]:
+
 
 parse("Tue Aug 23 17:00:35 JST 2016")
 
 
 # In[ ]:
 
+
 parse("2016-07-03T11:22:33Z")
 
 
 # In[ ]:
+
 
 parse("2016/07/03 04:05:06")
 
 
 # In[ ]:
 
+
 parse("2016/07/03")
 
 
 # In[ ]:
+
 
 parse('16/07/03', yearfirst=True)
 
@@ -461,10 +503,12 @@ parse('16/07/03', yearfirst=True)
 
 # In[ ]:
 
+
 from datetime import datetime, timezone, timedelta
 
 
 # In[ ]:
+
 
 dt1 = datetime(2016, 7, 5, 13, 45) # naive
 dt2 = datetime(2016, 7, 5, 13, 45, tzinfo=timezone(timedelta(hours=+9))) # aware
@@ -473,50 +517,60 @@ d = dt1.date()
 
 # In[ ]:
 
+
 dt1, dt2, d
 
 
 # In[ ]:
+
 
 dt1.isoformat()
 
 
 # In[ ]:
 
+
 str(dt1)
 
 
 # In[ ]:
+
 
 dt2.isoformat()
 
 
 # In[ ]:
 
+
 str(dt2)
 
 
 # In[ ]:
+
 
 d.isoformat()
 
 
 # In[ ]:
 
+
 str(d)
 
 
 # In[ ]:
+
 
 dt1.strftime("%Y/%m/%d %H:%M:%S")
 
 
 # In[ ]:
 
+
 dt1.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 
 
 # In[ ]:
+
 
 dt2.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 
@@ -538,10 +592,12 @@ dt2.strftime("%Y/%m/%d %H:%M:%S %Z %z")
 
 # In[ ]:
 
+
 from datetime import datetime, date
 
 
 # In[ ]:
+
 
 dt1 = datetime(2016, 7, 1, 22, 30)
 dt2 = datetime(2016, 7, 5, 13, 45)
@@ -549,15 +605,18 @@ dt2 = datetime(2016, 7, 5, 13, 45)
 
 # In[ ]:
 
+
 dt1 == datetime(2016, 7, 1, 22, 30, 0)
 
 
 # In[ ]:
 
+
 dt1 == dt1, dt1 == dt2, dt1 != dt1, dt1 != dt2, dt1 < dt2, dt1 > dt2, dt1 <= dt1, dt2 <= dt1, dt2 >= dt2, dt1 >= dt2
 
 
 # In[ ]:
+
 
 d1 = dt1.date()
 d2 = dt2.date()
@@ -565,10 +624,12 @@ d2 = dt2.date()
 
 # In[ ]:
 
+
 d1 == date(2016, 7, 1)
 
 
 # In[ ]:
+
 
 d1 == d1, d1 == d2, d1 != d1, d1 != d2, d1 < d2, d1 > d2, d1 <= d1, d2 <= d1, d2 >= d2, d1 >= d2
 
@@ -588,45 +649,54 @@ d1 == d1, d1 == d2, d1 != d1, d1 != d2, d1 < d2, d1 > d2, d1 <= d1, d2 <= d1, d2
 
 # In[ ]:
 
+
 from datetime import datetime, date
 
 
 # In[ ]:
+
 
 d1, d2 = date(2016, 7, 1), date(2016, 7, 3)
 
 
 # In[ ]:
 
+
 type(d2 - d1)
 
 
 # In[ ]:
+
 
 d2 - d1
 
 
 # In[ ]:
 
+
 str(d2 - d1)
 
 
 # In[ ]:
+
 
 str(d1 - d2)
 
 
 # In[ ]:
 
+
 dt1, dt2 = datetime(2016, 7, 1, 10, 30), datetime(2016, 7, 3, 9, 10)
 
 
 # In[ ]:
 
+
 dt2 - dt1
 
 
 # In[ ]:
+
 
 str(dt2 - dt1)
 
@@ -641,27 +711,32 @@ str(dt2 - dt1)
 
 # In[ ]:
 
+
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
 # In[ ]:
 
+
 d1, d2 = date(2014, 11, 22), date(2016, 3, 1)
 
 
 # In[ ]:
+
 
 str(d2 - d1)
 
 
 # In[ ]:
 
+
 delta = relativedelta(d2, d1)
 delta
 
 
 # In[ ]:
+
 
 month_count = delta.years * 12 + delta.months
 month_count
@@ -673,6 +748,7 @@ month_count
 # そこで、2つの日付をそれぞれ1日ずつずらしていって、その場合のdeltaがどうなるかを確認してみました。
 
 # In[ ]:
+
 
 # 2つの日付を1日ずつずらしてrelativedeltaの結果を調べるスクリプト
 
@@ -704,10 +780,12 @@ for x in range(9):
 
 # In[ ]:
 
+
 from datetime import datetime, date, timedelta
 
 
 # In[ ]:
+
 
 dt = datetime(2016, 7, 5, 13, 45)
 d = dt.date()
@@ -715,10 +793,12 @@ d = dt.date()
 
 # In[ ]:
 
+
 dt + timedelta(days=5, minutes=168)
 
 
 # In[ ]:
+
 
 d - timedelta(days=13)
 
@@ -727,11 +807,13 @@ d - timedelta(days=13)
 
 # In[ ]:
 
+
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
 # In[ ]:
+
 
 date(2016, 7, 5) - relativedelta(months=32)
 
@@ -745,10 +827,12 @@ date(2016, 7, 5) - relativedelta(months=32)
 
 # In[ ]:
 
+
 from datetime import datetime, timezone, timedelta
 
 
 # In[ ]:
+
 
 jst = timezone(timedelta(hours=+9)) # pytzを使う場合は pytz.timezone('Asia/Tokyo')
 jst
@@ -756,17 +840,20 @@ jst
 
 # In[ ]:
 
+
 dt = datetime(2016, 7, 5, 13, 45) # naive
 dt
 
 
 # In[ ]:
 
+
 dt2 = dt.replace(tzinfo=jst) # aware
 dt2
 
 
 # In[ ]:
+
 
 str(dt2)
 
@@ -780,11 +867,13 @@ str(dt2)
 
 # In[ ]:
 
+
 dt3 = dt2.replace(tzinfo=None)
 dt3
 
 
 # In[ ]:
+
 
 str(dt3)
 
@@ -799,11 +888,13 @@ str(dt3)
 
 # In[ ]:
 
+
 from datetime import datetime, date
 from time import localtime, mktime
 
 
 # In[ ]:
+
 
 tm = localtime() # struct_time
 tm
@@ -811,16 +902,19 @@ tm
 
 # In[ ]:
 
+
 t = mktime(tm) # タイムスタンプ(float)に変換
 t
 
 
 # In[ ]:
 
+
 datetime.fromtimestamp(t)
 
 
 # In[ ]:
+
 
 date.fromtimestamp(t)
 
@@ -828,6 +922,7 @@ date.fromtimestamp(t)
 # struct_timeがタプルであることを利用して、次のように書くこともできます。
 
 # In[ ]:
+
 
 datetime(*tm[:6])
 
@@ -842,10 +937,12 @@ datetime(*tm[:6])
 
 # In[ ]:
 
+
 from datetime import datetime
 
 
 # In[ ]:
+
 
 dt = datetime(2016, 7, 3, 12, 25)
 d = dt.date()
@@ -853,10 +950,12 @@ d = dt.date()
 
 # In[ ]:
 
+
 dt.timetuple()
 
 
 # In[ ]:
+
 
 d.timetuple()
 
@@ -870,10 +969,12 @@ d.timetuple()
 
 # In[ ]:
 
+
 from datetime import date, timedelta
 
 
 # In[ ]:
+
 
 start_date = date(2016, 7, 5)
 a = [start_date + timedelta(days=x) for x in range(5)]
@@ -887,11 +988,13 @@ a
 
 # In[ ]:
 
+
 from datetime import date
 from dateutil.rrule import rrule, DAILY
 
 
 # In[ ]:
+
 
 a = [x.date() for x in rrule(DAILY, count=5, dtstart=date(2016, 7, 5))]
 a
@@ -908,25 +1011,30 @@ a
 
 # In[ ]:
 
+
 import calendar
 
 
 # In[ ]:
+
 
 calendar.isleap(2016)
 
 
 # In[ ]:
 
+
 calendar.isleap(2015)
 
 
 # In[ ]:
 
+
 from datetime import date
 
 
 # In[ ]:
+
 
 d = date(2016, 7, 5)
 calendar.isleap(d.year)
@@ -939,35 +1047,42 @@ calendar.isleap(d.year)
 
 # In[ ]:
 
+
 from datetime import *
 
 
 # In[ ]:
+
 
 bool(datetime.fromtimestamp(0))
 
 
 # In[ ]:
 
+
 bool(date.fromtimestamp(0))
 
 
 # In[ ]:
+
 
 bool(time(0, 0, 0))
 
 
 # In[ ]:
 
+
 bool(timedelta(1))
 
 
 # In[ ]:
 
+
 bool(timedelta(0))
 
 
 # In[ ]:
+
 
 bool(timezone.utc)
 
@@ -988,10 +1103,12 @@ bool(timezone.utc)
 
 # In[ ]:
 
+
 import time
 
 
 # In[ ]:
+
 
 t = time.time()
 time.sleep(3.1)
@@ -1028,31 +1145,37 @@ print(time.time() - t)
 
 # In[ ]:
 
+
 from datetime import datetime
 import pickle
 
 
 # In[ ]:
 
+
 dt = datetime(2016, 7, 5, 13, 45)
 
 
 # In[ ]:
+
 
 pickle.dumps(dt) # datetime
 
 
 # In[ ]:
 
+
 pickle.dumps(dt.date()) # date
 
 
 # In[ ]:
 
+
 pickle.dumps(dt.timetuple()) # struct_time
 
 
 # In[ ]:
+
 
 pickle.dumps(dt - dt) # timedelta
 
@@ -1088,8 +1211,3 @@ pickle.dumps(dt - dt) # timedelta
 # #5.  
 # Python pandas で日時関連のデータ操作をカンタンに - StatsFragments  
 # http://sinhrks.hatenablog.com/entry/2014/11/09/183603
-
-# In[ ]:
-
-
-

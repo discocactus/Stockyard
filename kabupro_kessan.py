@@ -33,6 +33,7 @@
 
 # In[ ]:
 
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -52,6 +53,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # In[ ]:
 
+
 # MySQL の接続作成
 db_settings = {
     "host": 'localhost',
@@ -67,6 +69,7 @@ engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.form
 
 # In[ ]:
 
+
 sql = stock.sql() # MySQLに接続するクラスインスタンスを作成
 
 
@@ -76,12 +79,14 @@ sql = stock.sql() # MySQLに接続するクラスインスタンスを作成
 
 # In[ ]:
 
+
 kabupro_kessan = new_kessan
 
 
 # ## MySQL からの読み込み
 
 # In[ ]:
+
 
 table_name = 'kabupro_kessan'
 
@@ -90,12 +95,14 @@ table_name = 'kabupro_kessan'
 
 # In[ ]:
 
+
 kabupro_kessan = pd.read_sql_table(table_name, engine, index_col=None).drop('index', axis=1)
 
 
 # __クラス使用__
 
 # In[ ]:
+
 
 kabupro_kessan = sql.read_table(table_name)
 
@@ -104,10 +111,12 @@ kabupro_kessan = sql.read_table(table_name)
 
 # In[ ]:
 
+
 kabupro_kessan = pd.read_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv')
 
 
 # In[ ]:
+
 
 kabupro_kessan
 
@@ -116,6 +125,7 @@ kabupro_kessan
 # 整形後に保存した csv であれば配列の型の辞書を適用可能。
 
 # In[ ]:
+
 
 datatype = {'証券コード': 'int64',
                    '企業名': 'O',
@@ -144,6 +154,7 @@ datatype = {'証券コード': 'int64',
 
 # In[ ]:
 
+
 # 整形済みのデータが実行環境内に存在する場合
 datatype = dict(new_kessan.dtypes)
 datatype
@@ -151,10 +162,12 @@ datatype
 
 # In[ ]:
 
+
 kabupro_kessan = kabupro_kessan.astype(datatype)
 
 
 # In[ ]:
+
 
 kabupro_kessan.dtypes
 
@@ -165,10 +178,12 @@ kabupro_kessan.dtypes
 
 # In[ ]:
 
+
 xls_file = '/Users/Really/Stockyard/_dl_data/20171112f.xls' # http://ke.kabupro.jp/doc/down40.htm
 
 
 # In[ ]:
+
 
 # 決算プロの決算短信xlsを読み込む
 new_kessan = pd.read_excel(xls_file) 
@@ -178,15 +193,18 @@ new_kessan = pd.read_excel(xls_file)
 
 # In[ ]:
 
+
 new_kessan.head(20)
 
 
 # In[ ]:
 
+
 new_kessan.columns
 
 
 # In[ ]:
+
 
 # 列名を少し変更
 new_kessan.columns = [
@@ -217,26 +235,31 @@ new_kessan.columns = [
 
 # In[ ]:
 
+
 new_kessan[['証券コード', '企業名', '会計基準', '連結個別', '決算期', '決算期間', '期首', '期末',
        '名寄前勘定科目 (売上高欄)', '情報公開日 (更新日)']].head(20)
 
 
 # In[ ]:
 
+
 new_kessan.groupby('決算期').count()
 
 
 # In[ ]:
+
 
 new_kessan.groupby('決算期間').count()
 
 
 # In[ ]:
 
+
 new_kessan[['証券コード', '企業名', '期末', '売上高', '営業利益', '経常利益', '純利益', '情報公開日 (更新日)']].head(20)
 
 
 # In[ ]:
+
 
 new_kessan[['証券コード', '企業名', '期末', '一株当り純利益', '希薄化後一株当り純利益', '純資産又は株主資本',
        '総資産', '一株当り純資産', '営業キャッシュフロー', '投資キャッシュフロー', '財務キャッシュフロー',
@@ -245,10 +268,12 @@ new_kessan[['証券コード', '企業名', '期末', '一株当り純利益', '
 
 # In[ ]:
 
+
 new_kessan.dtypes
 
 
 # In[ ]:
+
 
 # 2015年のファイルでは int
 new_kessan['純利益'].max()
@@ -256,11 +281,13 @@ new_kessan['純利益'].max()
 
 # In[ ]:
 
+
 # 2017年のファイルでは float
 kabupro_kessan_new['純利益'].max()
 
 
 # In[ ]:
+
 
 # 2015年のファイルでは文字列が混入しているため object
 new_kessan['希薄化後一株当り純利益'].max()
@@ -268,25 +295,30 @@ new_kessan['希薄化後一株当り純利益'].max()
 
 # In[ ]:
 
+
 new_kessan['希薄化後一株当り純利益'].min()
 
 
 # In[ ]:
+
 
 new_kessan['期末'].min()
 
 
 # In[ ]:
 
+
 new_kessan['情報公開日 (更新日)'].min()
 
 
 # In[ ]:
 
+
 new_kessan.duplicated().any()
 
 
 # In[ ]:
+
 
 new_kessan.isnull().any()
 
@@ -295,11 +327,13 @@ new_kessan.isnull().any()
 
 # In[ ]:
 
+
 # 2015年のファイルでは int 型だったので float 型に
 new_kessan['純利益'] = new_kessan['純利益'].astype(float)
 
 
 # In[ ]:
+
 
 # 2015年のファイルでは index 17979 に '―' が入っていたために列が object 型になってしまっている
 new_kessan[new_kessan['希薄化後一株当り純利益'].apply(lambda x: type(x) is str)]
@@ -307,27 +341,32 @@ new_kessan[new_kessan['希薄化後一株当り純利益'].apply(lambda x: type(
 
 # In[ ]:
 
+
 # '―'  を NaN に置換
 new_kessan.loc[new_kessan['希薄化後一株当り純利益'].apply(lambda x: type(x) is str), '希薄化後一株当り純利益'] = np.nan
 
 
 # In[ ]:
 
+
 new_kessan['希薄化後一株当り純利益'][17979]
 
 
 # In[ ]:
+
 
 new_kessan['希薄化後一株当り純利益'].max()
 
 
 # In[ ]:
 
+
 # float 型に変換
 new_kessan['希薄化後一株当り純利益'] = new_kessan['希薄化後一株当り純利益'].astype(float)
 
 
 # In[ ]:
+
 
 # ソート
 new_kessan = new_kessan.sort_values(['証券コード', '連結個別', '期末', '情報公開日 (更新日)']).reset_index(drop=True)
@@ -337,11 +376,13 @@ new_kessan = new_kessan.sort_values(['証券コード', '連結個別', '期末'
 
 # In[ ]:
 
+
 # 保存
 new_kessan.to_csv('/Users/Really/Stockyard/_csv/kabupro_kessan_20171112.csv')
 
 
 # In[ ]:
+
 
 # 保存したファイルの確認
 csv_kessan = pd.read_csv('/Users/Really/Stockyard/_csv/kabupro_kessan_20171112.csv', index_col=0)
@@ -352,6 +393,7 @@ csv_kessan.head(20)
 
 # In[ ]:
 
+
 table_name = 'kabupro_kessan_20171112'
 
 
@@ -360,11 +402,13 @@ table_name = 'kabupro_kessan_20171112'
 
 # In[ ]:
 
+
 # データ型を定義しなくても意図通りの型で書き込めた
 new_kessan.to_sql(table_name, engine, if_exists='replace')
 
 
 # In[ ]:
+
 
 # このケースではデータ型の定義は必要ないのかも
 # sqlalchemy.typesで定義されたデータ型を辞書形式で設定して保存
@@ -400,25 +444,30 @@ kabupro_kessan.to_sql(table_name, engine, if_exists='replace', dtype=data_type)
 
 # In[ ]:
 
+
 sql_kessan = pd.read_sql_table(table_name, engine, index_col=None).drop('index', axis=1)
 
 
 # In[ ]:
+
 
 sql_kessan.head(20)
 
 
 # In[ ]:
 
+
 sql_kessan.columns
 
 
 # In[ ]:
 
+
 sql_kessan.dtypes
 
 
 # In[ ]:
+
 
 # nan 同士の比較は False になってしまうのでゼロで埋めて比較
 (sql_kessan.fillna(0) == new_kessan.fillna(0)).any()
@@ -428,20 +477,24 @@ sql_kessan.dtypes
 
 # In[ ]:
 
+
 kabupro_kessan = kabupro_kessan.append(new_kessan)
 
 
 # In[ ]:
+
 
 kabupro_kessan.tail(20)
 
 
 # In[ ]:
 
+
 kabupro_kessan.dtypes
 
 
 # In[ ]:
+
 
 # ソート
 kabupro_kessan = kabupro_kessan.sort_values(['証券コード', '連結個別', '期末', '情報公開日 (更新日)']).reset_index(drop=True)
@@ -451,10 +504,12 @@ kabupro_kessan = kabupro_kessan.sort_values(['証券コード', '連結個別', 
 
 # In[ ]:
 
+
 kabupro_kessan.duplicated().any()
 
 
 # In[ ]:
+
 
 # keep=Falseで重複行のいずれかではなくすべてを表示
 kabupro_kessan[kabupro_kessan.duplicated(keep=False)]
@@ -462,10 +517,12 @@ kabupro_kessan[kabupro_kessan.duplicated(keep=False)]
 
 # In[ ]:
 
+
 kabupro_kessan = kabupro_kessan.drop_duplicates()
 
 
 # In[ ]:
+
 
 # インデックスの振り直し
 kabupro_kessan = kabupro_kessan.reset_index(drop=True)
@@ -475,30 +532,36 @@ kabupro_kessan = kabupro_kessan.reset_index(drop=True)
 
 # In[ ]:
 
+
 kabupro_kessan.isnull().any()
 
 
 # In[ ]:
+
 
 kabupro_kessan['期末'].min()
 
 
 # In[ ]:
 
+
 kabupro_kessan['情報公開日 (更新日)'].min()
 
 
 # In[ ]:
+
 
 kabupro_kessan['期末'].max()
 
 
 # In[ ]:
 
+
 kabupro_kessan['情報公開日 (更新日)'].max()
 
 
 # In[ ]:
+
 
 kabupro_kessan.describe()
 
@@ -507,11 +570,13 @@ kabupro_kessan.describe()
 
 # In[ ]:
 
+
 # 保存
 kabupro_kessan.to_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv')
 
 
 # In[ ]:
+
 
 # 保存したファイルの確認
 csv_kessan = pd.read_csv('/Users/Really/Stockyard/_csv/kabupro_kessan.csv', index_col=0)
@@ -521,6 +586,7 @@ csv_kessan.head(20)
 # ## MySQL に保存
 
 # In[ ]:
+
 
 table_name = 'kabupro_kessan'
 
@@ -532,11 +598,13 @@ table_name = 'kabupro_kessan'
 
 # In[ ]:
 
+
 # データ型を定義しなくても意図通りの型で書き込めた
 kabupro_kessan.to_sql(table_name, engine, if_exists='replace')
 
 
 # In[ ]:
+
 
 # このケースではデータ型の定義は必要ないのかも
 # sqlalchemy.typesで定義されたデータ型を辞書形式で設定して保存
@@ -572,6 +640,7 @@ kabupro_kessan.to_sql(table_name, engine, if_exists='replace', dtype=data_type)
 
 # In[ ]:
 
+
 sql.write_table(table_name, kabupro_kessan)
 
 
@@ -581,6 +650,7 @@ sql.write_table(table_name, kabupro_kessan)
 
 # In[ ]:
 
+
 sql_kessan = pd.read_sql_table(table_name, engine, index_col=None).drop('index', axis=1)
 
 
@@ -588,35 +658,42 @@ sql_kessan = pd.read_sql_table(table_name, engine, index_col=None).drop('index',
 
 # In[ ]:
 
+
 sql_kessan = sql.read_table(table_name)
 
 
 # In[ ]:
+
 
 sql_kessan.head(20)
 
 
 # In[ ]:
 
+
 sql_kessan.tail(20)
 
 
 # In[ ]:
+
 
 sql_kessan.columns
 
 
 # In[ ]:
 
+
 sql_kessan.dtypes
 
 
 # In[ ]:
 
+
 kabupro_kessan.dtypes
 
 
 # In[ ]:
+
 
 # nan 同士の比較は False になってしまうのでゼロで埋めて比較
 (sql_kessan.fillna(0) == kabupro_kessan.fillna(0)).any()
@@ -626,6 +703,7 @@ kabupro_kessan.dtypes
 
 # In[ ]:
 
+
 # 決算プロの決算短信csv(エクセルファイルより書き出し)を読み込む http://ke.kabupro.jp/doc/down40.htm
 csv_version = pd.read_csv('/Users/Really/Stockyard/_dl_data/kabupro_20171112f.csv') 
 
@@ -634,6 +712,7 @@ csv_version = pd.read_csv('/Users/Really/Stockyard/_dl_data/kabupro_20171112f.cs
 
 # In[ ]:
 
+
 csv_version
 
 
@@ -641,40 +720,48 @@ csv_version
 
 # In[ ]:
 
+
 csv_version.dtypes
 
 
 # In[ ]:
+
 
 csv_version.duplicated().any()
 
 
 # In[ ]:
 
+
 csv_version.isnull().any()
 
 
 # In[ ]:
+
 
 csv_version['期末'].min()
 
 
 # In[ ]:
 
+
 csv_version['情報公開日 (更新日)'].min()
 
 
 # In[ ]:
+
 
 csv_version[csv_version['連結個別'] == '個別']
 
 
 # In[ ]:
 
+
 csv_version[csv_version['連結個別'] == '連結']
 
 
 # In[ ]:
+
 
 csv_version.describe()
 
@@ -682,6 +769,7 @@ csv_version.describe()
 # ## 整形
 
 # In[ ]:
+
 
 # 日付のパース、datetime.dateへの型変換
 csv_version['期首'] = csv_version['期首'].apply(lambda x: parse(x).date())
@@ -691,11 +779,13 @@ csv_version['情報公開日 (更新日)'] = csv_version['情報公開日 (更�
 
 # In[ ]:
 
+
 # 同じく日付のパース、datetime.dateへの型変換をまとめて。1列ずつやるより少し遅い？ 23s -> 30s
 csv_version[['期首', '期末', '情報公開日 (更新日)']] = csv_version[['期首', '期末', '情報公開日 (更新日)']].applymap(lambda x: parse(x).date())
 
 
 # In[ ]:
+
 
 # pandasのTimestampへの型変換
 # まとめてできないの？
@@ -706,6 +796,7 @@ csv_version['情報公開日 (更新日)'] = pd.to_datetime(csv_version['情報�
 
 
 # In[ ]:
+
 
 # 数値に変換する列のリスト作成
 num_list = [
@@ -726,11 +817,13 @@ num_list = [
 
 # In[ ]:
 
+
 # 数値に変換する項目の「,」を削除、float型に変換
 csv_version[num_list] = csv_version[num_list].apply(lambda x: x.str.replace(',','')).astype(float)
 
 
 # In[ ]:
+
 
 # 冗長なやり方
 
@@ -743,6 +836,7 @@ csv_version = csv_version.astype(dict(zip(num_list, [float for i in range(len(nu
 
 
 # In[ ]:
+
 
 # さらに冗長なやり方
 
@@ -805,6 +899,7 @@ csv_version = csv_version.astype({
 
 # In[ ]:
 
+
 # ソート
 csv_version = csv_version.sort_values(['証券コード', '連結個別', '期末', '情報公開日 (更新日)']).reset_index(drop=True)
 
@@ -815,15 +910,18 @@ csv_version = csv_version.sort_values(['証券コード', '連結個別', '期�
 
 # In[ ]:
 
+
 code = 7203
 
 
 # In[ ]:
 
+
 kabupro.columns
 
 
 # In[ ]:
+
 
 kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準'), 
            ['決算期', '期末', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益', '情報公開日 (更新日)']].tail(10)
@@ -831,21 +929,25 @@ kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '�
 
 # In[ ]:
 
+
 diff_test = kabupro.ix[(kabupro['証券コード'] == code) & (kabupro['会計基準'] == '米国基準'), 
            ['決算期', '売上高', '営業利益', '経常利益', '純利益', '一株当り純利益']].tail(10)
 
 
 # In[ ]:
 
+
 diff_test
 
 
 # In[ ]:
 
+
 diff_test[['売上高差分', '営業利益差分', '経常利益差分', '純利益差分', '一株当り純利益差分']] = diff_test[['売上高', '営業利益', '経常利益', '純利益', '一株当り純利益']]
 
 
 # In[ ]:
+
 
 # 全銘柄一括でやるなら、上の行とコードが一致するかの判定を追加
 for count in range(70501, 70501 + len(diff_test) - 1):
@@ -858,6 +960,7 @@ for count in range(70501, 70501 + len(diff_test) - 1):
 
 
 # In[ ]:
+
 
 diff_test[['決算期', '売上高差分', '営業利益差分', '経常利益差分', '純利益差分', '一株当り純利益差分']]
 # 一株当り純利益差分が株探の１株益と揃わない

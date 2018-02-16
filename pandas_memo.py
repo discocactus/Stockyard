@@ -1233,6 +1233,29 @@ df_idx.query('index >= 2')
 
 # # My Case Studies
 
+# ## 文字列中の特定の文字の置換
+
+# In[ ]:
+
+
+rakuten['日付'] = rakuten['日付'].str.replace('.', '/')
+
+
+# In[ ]:
+
+
+rakuten.loc[rakuten['利用日'].str.contains('.'), '利用日'] = rakuten.loc[rakuten['利用日'].str.contains('.'), '利用日'].str.replace('.', '/')
+
+
+# In[ ]:
+
+
+rakuten['利用日'] = rakuten['利用日'].where(rakuten['利用日'].str.contains('.')).str.replace('.', '/')
+
+
+# これらの書き方でうまくいけばよいが、Jupyter内での処理の順序によっては SettingWithCopyWarning が出ることがある  
+# その場合、それ以前のセルでデータフレームの中身を表示する時にただ df としているところを display(df) とすると出なくなるかも
+
 # ## 数値のみであるべき列に文字列が混入している場合の特定と置換
 
 # In[ ]:

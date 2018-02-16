@@ -4,6 +4,7 @@ from pymongo import MongoClient
 import MySQLdb
 import csv
 import re
+import pandas as pd
 
 
 class ValidationPipeline(object):
@@ -111,7 +112,6 @@ class csvPipeline(object):
     """
     Itemをcsvに保存するPipeline。
     """
-
     def open_spider(self, spider):
         """
         Spiderの開始時に'yahoo_fundamental.csv'が存在しない場合は作成する。
@@ -146,27 +146,28 @@ class csvPipeline(object):
                                             '信用買残前週比',
                                             '信用売残',
                                             '信用売残前週比',
-                                            '貸借倍率'
+                                            '貸借倍率',
+                                            'get'
                                             ])
                 writer.writeheader()
         except:
-            print('\n\nFile exists: yahoo_fundamental.csv\n\n')
+            print('\n\n --- File exists: yahoo_fundamental.csv ---\n\n')
+
 
     def close_spider(self, spider):
         """
         Spiderの終了時の動作。
         """
+        df = pd.read_csv('yahoo_fundamental.csv')
+        df = df.sort_values(['date', 'code', 'get'])
+        df = df.drop_duplicates(['date', 'code'], keep='last').reset_index(drop=True)
+        df.to_csv('yahoo_fundamental.csv', index=False)
+
 
     def process_item(self, item, spider):
         """
         Itemをファイルに挿入する。
         """
-        dict_item = dict(item)
-        for key in dict_item:
-            dict_item[key] = re.sub('\n', '', dict_item[key])
-        print('\n - dict_item - \n')
-        print(dict_item)
-        print('\n - end - \n')
         with open('yahoo_fundamental.csv', 'a', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, ['date',
                                         'code',
@@ -195,8 +196,9 @@ class csvPipeline(object):
                                         '信用買残前週比',
                                         '信用売残',
                                         '信用売残前週比',
-                                        '貸借倍率'
+                                        '貸借倍率',
+                                        'get'
                                         ])
-            writer.writerows([dict_item])
+            writer.writerows([dict(item)])
 
         return item

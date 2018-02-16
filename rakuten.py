@@ -3,6 +3,7 @@
 
 # In[ ]:
 
+
 # import
 import sys
 import os
@@ -26,10 +27,12 @@ import stock
 
 # In[ ]:
 
+
 importlib.reload(stock)
 
 
 # In[ ]:
+
 
 # pandas の最大表示列数を設定 (max_rows で表示行数の設定も可能)
 pd.set_option('display.max_columns', 30)
@@ -37,12 +40,14 @@ pd.set_option('display.max_columns', 30)
 
 # In[ ]:
 
+
 sql = stock.sql()
 
 
 # # ログイン。ログイン情報が出力に表示されてしまうのでそのままでGitHubに上げちゃダメ！ログインを済ませたら必ずすぐにクリア！
 
 # In[ ]:
+
 
 # sign-in
 # 認証の情報
@@ -82,11 +87,13 @@ print(browser.select('.client-name')[0].text.strip())
 
 # In[ ]:
 
+
 link_to_next = browser.get_link('国内株式') #「次へ」というテキストを持つリンクを取得する。
 browser.follow_link(link_to_next)
 
 
 # In[ ]:
+
 
 link_to_next = browser.get_link('スーパースクリーナー') #「次へ」というテキストを持つリンクを取得する。
 browser.follow_link(link_to_next)
@@ -94,10 +101,12 @@ browser.follow_link(link_to_next)
 
 # In[ ]:
 
+
 print(browser.parsed.prettify())
 
 
 # In[ ]:
+
 
 @retry(tries=5, delay=1, backoff=2)
 def get_html(url):
@@ -111,6 +120,7 @@ def get_html(url):
 
 
 # In[ ]:
+
 
 # 個別銘柄の決算ページを開く
 code = 1301 # トヨタ
@@ -126,15 +136,18 @@ print(browser.select('.kobetsu_data_table1_meigara')[0].text.strip())
 
 # In[ ]:
 
+
 https://member.rakuten-sec.co.jp/app/info_jp_prc_stock.do;BV_SessionID=A3145518759A80D1E6A514FC5259B5E2.42ad2c3e?eventType=init&infoInit=1&contentId=7&type=&sub_type=&local=&dscrCd=72030&marketCd=1&gmn=J&smn=01&lmn=01&fmn=01
 
 
 # In[ ]:
 
+
 kessan_html = browser.find()
 
 
 # In[ ]:
+
 
 tables = pd.read_html(str(kessan_html), header=0)
 

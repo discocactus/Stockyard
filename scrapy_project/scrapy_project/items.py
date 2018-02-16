@@ -51,3 +51,5 @@ class yahoo_fundamental(scrapy.Item):
     信用売残 = scrapy.Field()
     信用売残前週比 = scrapy.Field()
     貸借倍率 = scrapy.Field()
+
+    get = scrapy.Field()
