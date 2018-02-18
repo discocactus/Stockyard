@@ -25,8 +25,6 @@ import logging
 from retry import retry
 # import traceback
 # from retrying import retry
-# from sqlalchemy import create_engine
-# from sqlalchemy.types import Date, Integer, Float, Text
 
 import stock
 
@@ -46,20 +44,6 @@ importlib.reload(stock)
 # price_path = '/Users/Really/Stockyard/_yahoo_csv'
 csv_path = 'D:\stockyard\_csv'
 price_path = 'D:\stockyard\_yahoo_csv'
-
-
-# # MySQLに接続
-
-# In[ ]:
-
-
-sql = stock.msql()
-
-
-# In[ ]:
-
-
-help(sql)
 
 
 # # ヒストリカルデータの初回連続読み込み
@@ -101,10 +85,17 @@ reading_code
 # In[ ]:
 
 
-read_start = 71
+read_start = 2
 reading_code = keep_failed[read_start : ]#read_start + 8]
-reading_code += list(yahoo_stock_table['code'][1600 : 1700])
+# reading_code += list(yahoo_stock_table['code'][1600 : 1700])
 reading_code, len(reading_code), 
+
+
+# In[ ]:
+
+
+reading_code = [3540, ]
+reading_code
 
 
 # ## 失敗分読み込み用コードリスト作成
@@ -117,18 +108,6 @@ reading_code, len(reading_code)
 
 
 # ## 連続読み込み書き込み
-
-# In[ ]:
-
-
-sql.get_info('yahoo_info')
-
-
-# In[ ]:
-
-
-stock.get_yahoo_info()
-
 
 # In[ ]:
 
@@ -250,14 +229,33 @@ start_index
 
 
 increase_number = 100
-# end_index = None
-end_index = start_index + increase_number
+end_index = None
+# end_index = start_index + increase_number
 
-# reading_code = sql.get_yahoo_stock_code()
 reading_code = stock.get_yahoo_stock_code(start_index, end_index)
 print(reading_code[-10:])
 print(len(reading_code))
 print('Next start from {0}'.format(end_index))
+
+
+# ## 任意選択読み込み用コードリスト作成
+
+# In[ ]:
+
+
+read_start = 71
+reading_code = keep_failed[read_start : ]#read_start + 8]
+reading_code += list(yahoo_stock_table['code'][1600 : 1700])
+reading_code, len(reading_code), 
+
+
+# ## 失敗分読み込み用コードリスト作成
+
+# In[ ]:
+
+
+reading_code = failed
+reading_code, len(reading_code)
 
 
 # ## 連続更新
@@ -510,7 +508,7 @@ info = info.astype({'Code': int}) # int型を代入してもなぜかfloat型に
 info
 
 
-# ## 価格データの読み込み前にMySQLに保存済みのinfoテーブルとの結合が必要な場合
+# ## 価格データの読み込み前に保存済みのinfoテーブルとの結合が必要な場合
 
 # In[ ]:
 
