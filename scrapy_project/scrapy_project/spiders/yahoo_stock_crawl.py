@@ -22,6 +22,7 @@ class yahoo_stock_crawl_spider(CrawlSpider):
     rules = (
         # 試験的に一覧の9ページ目(または指定ページ)まで。末尾の \d$ (or [1-2]$) を \d+$ に変えれば10ページ以降も辿れるはず
         Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=[1-2]$')),
+        # Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=\d+$')),
         Rule(LinkExtractor(allow=r'/stocks/detail/\?code=\d+$'), callback='parse_fundamental'),
     )
 
@@ -32,15 +33,18 @@ class yahoo_stock_crawl_spider(CrawlSpider):
         """
         item = yahoo_fundamental()  # yahoo_fundamental オブジェクトを作成
 
-        item['date'] = response.css('#stockinf span').xpath('string()').extract()[0] # date
-        item['code'] = response.css('#stockinf dt').xpath('string()').extract_first() # 銘柄コード
-        item['name'] = response.css('#stockinf h1').xpath('string()').extract_first() # 銘柄名
+        # item['date'] = response.css('#stockinf span').xpath('string()').extract()[0] # date
+        item['date'] = response.css(
+            '.innerDate > div:nth-child(7) > dl:nth-child(1) > dd:nth-child(1) > span:nth-child(2)'
+            ).xpath('string()').extract_first() # date
+        item['code'] = response.css('.stocksInfo > dt:nth-child(1)').xpath('string()').extract_first() # 銘柄コード
+        item['name'] = response.css('.symbol > h1:nth-child(1)').xpath('string()').extract_first() # 銘柄名
 
         item['p_close'] = response.css('#detail strong').xpath('string()').extract()[2] # 前日終値
         item['open'] = response.css('#detail strong').xpath('string()').extract()[3] # 始値
         item['high'] = response.css('#detail strong').xpath('string()').extract()[4] # 高値
         item['low'] = response.css('#detail strong').xpath('string()').extract()[5] # 安値
-        item['close'] = response.css('#stockinf td').xpath('string()').extract()[1] # 終値
+        item['close'] = response.css('td.stoksPrice:nth-child(3)').xpath('string()').extract_first() # 終値
         item['volume'] = response.css('#detail strong').xpath('string()').extract()[6] # 出来高
         item['売買代金'] = response.css('#detail strong').xpath('string()').extract()[7] # 売買代金
         item['値幅制限'] = response.css('#detail strong').xpath('string()').extract()[8] # 値幅制限
@@ -66,6 +70,7 @@ class yahoo_stock_crawl_spider(CrawlSpider):
 
         item['get'] = datetime.now().strftime("%Y/%m/%d %H:%M:%S") # 取得日時
 
+        item['date'] = re.sub('[（）]', '', item['date'])
         for key in item:
             item[key] = re.sub('\n', '', item[key])
 

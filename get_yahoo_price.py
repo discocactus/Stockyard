@@ -46,6 +46,101 @@ csv_path = 'D:\stockyard\_csv'
 price_path = 'D:\stockyard\_yahoo_csv'
 
 
+# # Yahooの銘柄一覧ページから銘柄コードを取得
+
+# In[ ]:
+
+
+reading_code = []
+
+
+# In[ ]:
+
+
+yahoo_stock_table = stock.get_stock_table_yahoojp()
+
+
+# In[ ]:
+
+
+len(yahoo_stock_table)
+
+
+# In[ ]:
+
+
+display(yahoo_stock_table)
+
+
+# In[ ]:
+
+
+yahoo_stock_table.columns = ['code', 'market', 'data', 'price', 'extra']
+
+
+# In[ ]:
+
+
+yahoo_stock_table = yahoo_stock_table[['code', 'market', 'data', 'price']]
+
+
+# In[ ]:
+
+
+yahoo_stock_table.to_csv('{0}/yahoo_stock_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+
+
+# In[ ]:
+
+
+reading_code[3700:]
+
+
+# In[ ]:
+
+
+p = 1
+base = 'http://stocks.finance.yahoo.co.jp/stocks/qi/?&p={0}'
+url = base.format(p)
+
+
+# In[ ]:
+
+
+tables = pd.read_html(url, header=0)
+
+
+# In[ ]:
+
+
+tables[2].iloc[0, 3]
+
+
+# In[ ]:
+
+
+tables[2]
+
+
+# In[ ]:
+
+
+while True:
+    url = base.format(p)
+    # 'https://stocks.finance.yahoo.co.jp/stocks/qi/?&p=1' # 2018-03-03 p=187まで
+    tables = pd.read_html(url, header=0)
+    if len(tables[2]) == 0:
+        break
+    reading_code.extend(list(tables[2]['コード']))
+    p += 1
+
+
 # # ヒストリカルデータの初回連続読み込み
 
 # ## TODO 価格データ読み込み済みリストの作成、次に読み込む銘柄コードの自動取得化
@@ -66,7 +161,9 @@ start_index = 3100
 increase_number = 100
 end_index = start_index + increase_number
 
-reading_code = stock.get_yahoo_stock_code(start_index, end_index)
+# reading_code = stock.get_jpx_expro_code(start_index, end_index)
+reading_code = stock.get_yahoo_code(start_index, end_index)
+# reading_code = stock.get_yahoo_code(start_index)
 print(reading_code[-10:])
 print('Next start from {0}'.format(start_index + increase_number))
 
@@ -76,7 +173,7 @@ print('Next start from {0}'.format(start_index + increase_number))
 # In[ ]:
 
 
-reading_code = stock.get_new_added_stock_code()
+reading_code = stock.get_jpx_new_added_code()
 reading_code
 
 

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 import numpy as np
 import pandas as pd
 import pandas.tseries.offsets as offsets
@@ -11,170 +11,41 @@ import logging
 from retry import retry
 # import traceback
 # from retrying import retry
-from sqlalchemy import create_engine
-from sqlalchemy.types import Date, Integer, Float, Text
-# from sqlalchemy.types import Integer
-# from sqlalchemy.types import Text
-
-
-class sql:
-    def write_price(self, code, price):
-        table_name = 't_{0}'.format(code)
-        # sqlalchemy.typesで定義されたデータ型を辞書形式で設定
-        dtype = {
-            'Date': Date(),
-            'Open': Integer(),
-            'High': Integer(),
-            'Low': Integer(),
-            'Close': Integer(),
-            'Volume': Integer(),
-            'AdjClose': Float()
-        }
-        price.to_sql(table_name, self.engine, if_exists='replace', dtype=dtype)
-        # 主キーを設定
-        # 参考 https://stackoverflow.com/questions/30867390/python-pandas-to-sql-how-to-create-a-table-with-a-primary-key
-        with self.engine.connect() as con:
-            con.execute('ALTER TABLE "{0}" ADD PRIMARY KEY ("Date");'.format(table_name))
-        
-
-    def get_price(self, code):
-        # table_name = 't_{0}'.format(code)
-        # result = pd.read_sql_table(table_name, self.engine, index_col='Date')#.drop('index', axis=1)
-        sql_query = 'SELECT * FROM t_{0}'.format(code)
-        result = pd.read_sql(sql_query, self.engine, index_col='Date')
-        result.index = pd.to_datetime(result.index)
-        
-        return result
-    
-    
-    def write_info(self, table_name, info):
-        # sqlalchemy.typesで定義されたデータ型を辞書形式で設定
-        dtype = {
-            'Code': Integer(),
-            'StockName': Text(),
-            'Date': Date(),
-            'Open': Text()}
-        
-        info.to_sql(table_name, self.engine, if_exists='replace', dtype=dtype)
-        
-        
-    def get_info(self, table_name):
-        # result = pd.read_sql_table(table_name, self.engine, index_col=None).drop('index', axis=1)
-        sql_query = 'SELECT * FROM {0}'.format(table_name)
-        result = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
-        result['Date'] = pd.to_datetime(result['Date'])
-        
-        return result
-    
-    
-    def get_yahoo_info(self):
-        # result = pd.read_sql_table(table_name, self.engine, index_col=None).drop('index', axis=1)
-        sql_query = 'SELECT * FROM yahoo_info'
-        result = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
-        result['Date'] = pd.to_datetime(result['Date'])
-        
-        return result
-        
-
-    def get_yahoo_stock_code(self, start_index=0, end_index=None):
-        # yahoo_stock_table = pd.read_sql_table('yahoo_stock_table', self.engine, index_col=None).drop('index', axis=1)
-        sql_query = 'SELECT * FROM yahoo_stock_table'
-        yahoo_stock_table = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
-        
-        if end_index == None:
-            end_index = len(yahoo_stock_table)
-
-        result = list(yahoo_stock_table['code'][start_index : end_index])
-        
-        return result
-
-
-    def get_new_added_stock_code(self, start_index=0, end_index=None):
-        # new_added_stock_table = pd.read_sql_table('new_added_stock_table', self.engine, index_col=None).drop('index', axis=1)
-        sql_query = 'SELECT * FROM new_added_stock_table'
-        new_added_stock_table = pd.read_sql(sql_query, self.engine, index_col='index')#.drop('index', axis=1)
-        
-        if end_index == None:
-            end_index = len(new_added_stock_table)
-
-        result = list(new_added_stock_table['code'][start_index : end_index])
-        
-        return result
-
-
-    def statement_query(self, sql_query):
-        result = pd.read_sql_query(sql_query, self.engine, index_col=None)
-        # ex. df = sql.statement_query('SELECT code, name FROM domestic_stock_table')
-        # テーブル全体ではなく抽出の場合、インデックスは無いらしく下記ではエラーになる
-        #result = pd.read_sql_query(statement, self.engine, index_col=None).drop('index', axis=1)
-        
-        return result
-    
-    
-    def write_table(self, table_name, table):
-        table.to_sql(table_name, self.engine, if_exists='replace')
-        
-    
-    def read_table(self, table_name, index_col=None):
-        # result = pd.read_sql_table(table_name, self.engine, index_col=index_col)
-        sql_query = 'SELECT * FROM {0}'.format(table_name)
-        result = pd.read_sql(sql_query, self.engine, index_col=index_col)
-        
-        return result
-    
-    
-class msql(sql):    
-    db_settings = {
-        "db": 'mysql', # ドライバーは mysqldb になる。mysqlclient のこと？
-        # "db": 'mysql+mysqlconnector',
-        # "db": 'mysql+pymysql',
-        # "host": 'localhost',
-        "host": '127.0.0.1',
-        # "host": 'MyCon',
-        "database": 'stockyard',
-        "user": 'user',
-        "password": 'password',
-        "port": '3306',
-        "charset": '?charset=utf8mb4'
-    }
-    # engine = create_engine('mysql://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
-    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}{charset}'.format(**db_settings))
-    
-    
-class psql(sql):    
-    db_settings = {
-        "db": 'postgresql', # デフォルトドライバーは psycopg2 になる。
-        "user": 'python',
-        "password": 'password',
-        "host": 'localhost',
-        "port": '5432',
-        "database": 'stockyard'
-    }
-    engine = create_engine('{db}://{user}:{password}@{host}:{port}/{database}'.format(**db_settings))
 
     
-def get_yahoo_stock_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
-    yahoo_stock_table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+def get_jpx_expro_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+    jpx_expro = pd.read_csv('{0}/jpx_expro.csv'.format(csv_path), index_col=0)
 
     if end_index == None:
-        end_index = len(yahoo_stock_table)
+        end_index = len(jpx_expro)
 
-    result = list(yahoo_stock_table['code'][start_index : end_index])
+    result = list(jpx_expro['code'][start_index : end_index])
 
     return result
     
     
-def get_new_added_stock_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
-    new_added_stock_table = pd.read_csv('{0}/new_added_stock_table.csv'.format(csv_path), index_col=0)
+def get_jpx_new_added_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+    jpx_new_added = pd.read_csv('{0}/jpx_new_added.csv'.format(csv_path), index_col=0)
 
     if end_index == None:
-        end_index = len(new_added_stock_table)
+        end_index = len(jpx_new_added)
 
-    result = list(new_added_stock_table['code'][start_index : end_index])
+    result = list(jpx_new_added['code'][start_index : end_index])
 
     return result
     
     
+def get_yahoo_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+    yahoo_code = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+
+    if end_index == None:
+        end_index = len(yahoo_code)
+
+    result = list(yahoo_code['code'][start_index : end_index])
+
+    return result
+
+
 def get_yahoo_info(csv_path='D:\stockyard\_csv'):
     result = pd.read_csv('{0}/yahoo_info.csv'.format(csv_path), index_col=0)
     result['Date'] = pd.to_datetime(result['Date'])
@@ -197,6 +68,26 @@ def get_table(url):
     return result
 
 
+def get_stock_table_yahoojp():
+    result = []
+    p = 1
+    base = 'http://stocks.finance.yahoo.co.jp/stocks/qi/?&p={0}'
+
+    while True:
+        url = base.format(p)
+        # 'https://stocks.finance.yahoo.co.jp/stocks/qi/?&p=1' # 2018-03-03 p=187まで
+        print('{0}: {1}'.format(p, url))
+        tables = get_table(url)
+        if len(tables[2]) == 0:
+            break
+        result.append(tables[2])
+        p += 1
+        
+    result = pd.concat(result, ignore_index=True)
+        
+    return result
+
+  
 def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
     # http://jbclub.xii.jp/?p=598
