@@ -12,8 +12,15 @@ from retry import retry
 # import traceback
 # from retrying import retry
 
+
+# パスの設定
+csv_path = 'D:\stockyard\_csv'
+price_path = 'D:\stockyard\_yahoo_csv'
+# csv_path = '/home/hideshi_honma/stockyard/_csv'
+# price_path = '/home/hideshi_honma/stockyard/_yahoo_csv'
+
     
-def get_jpx_expro_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+def get_jpx_expro_code(start_index=0, end_index=None, csv_path=csv_path):
     jpx_expro = pd.read_csv('{0}/jpx_expro.csv'.format(csv_path), index_col=0)
 
     if end_index == None:
@@ -24,7 +31,7 @@ def get_jpx_expro_code(start_index=0, end_index=None, csv_path='D:\stockyard\_cs
     return result
     
     
-def get_jpx_new_added_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+def get_jpx_new_added_code(start_index=0, end_index=None, csv_path=csv_path):
     jpx_new_added = pd.read_csv('{0}/jpx_new_added.csv'.format(csv_path), index_col=0)
 
     if end_index == None:
@@ -35,10 +42,10 @@ def get_jpx_new_added_code(start_index=0, end_index=None, csv_path='D:\stockyard
     return result
     
     
-def get_yahoo_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
+def get_yahoo_code(start_index=0, end_index=None, csv_path=csv_path):
     yahoo_code = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
 
-    if end_index == None:
+    if (end_index == None) or (end_index > len(yahoo_code)):
         end_index = len(yahoo_code)
 
     result = list(yahoo_code['code'][start_index : end_index])
@@ -46,14 +53,14 @@ def get_yahoo_code(start_index=0, end_index=None, csv_path='D:\stockyard\_csv'):
     return result
 
 
-def get_yahoo_info(csv_path='D:\stockyard\_csv'):
+def get_yahoo_info(csv_path=csv_path):
     result = pd.read_csv('{0}/yahoo_info.csv'.format(csv_path), index_col=0)
     result['Date'] = pd.to_datetime(result['Date'])
 
     return result
 
     
-def get_yahoo_price(code, price_path='D:\stockyard\_yahoo_csv'):
+def get_yahoo_price(code, price_path=price_path):
     result = pd.read_csv('{0}/t_{1}.csv'.format(price_path, code), index_col=0)
     result.index = pd.to_datetime(result.index)
 
@@ -147,11 +154,13 @@ def extract_price(tmp_price):
 
 def reform_info(tmp_info, code, stock_name):
     # 単列の場合、代入と同時に列を生成できるが、複数列の場合は存在しないとエラーになるので先に列を追加しなければいけない
-    result = tmp_info.ix[:, ['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']] # 列を追加、並べ替え
-    result[['Code', 'StockName']] = [code, stock_name] # 複数列に値を代入する場合は列名をリスト形式で記述
-    result['Code'] = result['Code'].astype(int) # float型になってしまうので変換
+    # result = tmp_info.loc[:, ['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']] # 列を追加、並べ替え
+    # result[['Code', 'StockName']] = [code, stock_name] # 複数列に値を代入する場合は列名をリスト形式で記述
+    tmp_info['Code'] = code # float型になってしまうので変換
+    tmp_info['StockName'] = stock_name
+    tmp_info = tmp_info[['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']] # 列を並べ替え
             
-    return result
+    return tmp_info
 
 
 def complement_price(price_table):

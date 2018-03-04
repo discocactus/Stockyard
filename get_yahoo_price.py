@@ -46,13 +46,7 @@ csv_path = 'D:\stockyard\_csv'
 price_path = 'D:\stockyard\_yahoo_csv'
 
 
-# # Yahooの銘柄一覧ページから銘柄コードを取得
-
-# In[ ]:
-
-
-reading_code = []
-
+# # Yahooの銘柄一覧テーブルを取得
 
 # In[ ]:
 
@@ -99,46 +93,36 @@ pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
 # In[ ]:
 
 
-reading_code[3700:]
+list(pd.read_csv('{0}/keep_failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())
+
+
+# # GCE環境での新規読み込み用に新規infoファイルの作成
+
+# In[ ]:
+
+
+info = stock.get_yahoo_info()
 
 
 # In[ ]:
 
 
-p = 1
-base = 'http://stocks.finance.yahoo.co.jp/stocks/qi/?&p={0}'
-url = base.format(p)
+a = pd.DataFrame(index=[], columns=['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'])
+a
 
 
 # In[ ]:
 
 
-tables = pd.read_html(url, header=0)
+a = a.append(info.iloc[1,1:], ignore_index = True)
+a
 
 
 # In[ ]:
 
 
-tables[2].iloc[0, 3]
-
-
-# In[ ]:
-
-
-tables[2]
-
-
-# In[ ]:
-
-
-while True:
-    url = base.format(p)
-    # 'https://stocks.finance.yahoo.co.jp/stocks/qi/?&p=1' # 2018-03-03 p=187まで
-    tables = pd.read_html(url, header=0)
-    if len(tables[2]) == 0:
-        break
-    reading_code.extend(list(tables[2]['コード']))
-    p += 1
+# 出力後、ファイル名は適宜変更
+a.to_csv('{0}/yahoo_info_gce.csv'.format(csv_path))
 
 
 # # ヒストリカルデータの初回連続読み込み
@@ -157,8 +141,8 @@ done
 # In[ ]:
 
 
-start_index = 3100
-increase_number = 100
+start_index = 0
+increase_number = 2
 end_index = start_index + increase_number
 
 # reading_code = stock.get_jpx_expro_code(start_index, end_index)
@@ -201,6 +185,7 @@ reading_code
 
 
 reading_code = failed
+# reading_code = list(pd.read_csv('{0}/keep_failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())
 reading_code, len(reading_code)
 
 
@@ -269,10 +254,25 @@ print(save_failed)
 
 # 最後にinfoの重複と順序を整理してから再度保存
 info = info.drop_duplicates()
-info = info.sort_values(by=['Code', 'Date'])
+info = info.sort_values(by=['Code', 'Date']).reset_index(drop=True)
 info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
 
 logging.info('{0} get_price Finished'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+
+# In[ ]:
+
+
+a = stock.get_yahoo_info()
+a
+
+
+# In[ ]:
+
+
+a = a.drop_duplicates()
+a = a.sort_values(by=['Code', 'Date']).reset_index(drop=True)
+a
 
 
 # ## 変数を別名でキープ
@@ -428,7 +428,7 @@ print(save_failed)
 
 # 最後にinfoの重複と順序を整理してから再度保存
 info = info.drop_duplicates()
-info = info.sort_values(by=['Code', 'Date'])
+info = info.sort_values(by=['Code', 'Date']).reset_index(drop=True)
 info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
 
 logging.info('{0} add_new_price Finished'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
@@ -496,11 +496,11 @@ pd.Series(keep_failed).to_csv('{0}/keep_failed.csv'.format(csv_path))
 # In[ ]:
 
 
-code = 9284 # 銘柄コード
+code = 1376 # 銘柄コード
 
 # 読み込み期間の設定
-start = '2017-10-01'
-end = None
+start = '1987-03-01'
+end = '1999-12-31'
 
 # ロガー設定
 start_time = dt.datetime.now()
@@ -533,6 +533,18 @@ except Exception as e:
 
 print('Failed in {0} stocks at get:'.format(len(failed)))
 print(failed)
+
+
+# In[ ]:
+
+
+tmp_price
+
+
+# In[ ]:
+
+
+tmp_price[tmp_price.isnull().any(axis=1)].reset_index()
 
 
 # In[ ]:
