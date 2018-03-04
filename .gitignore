@@ -12,7 +12,11 @@
 
 /.ipynb_checkpoints/*
 
+/scrapy_project/.ipynb_checkpoints/*
+
 /__pycache__/*
+
+/_keep/*
 
 /_ahaha_stock/*
 
