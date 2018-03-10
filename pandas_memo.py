@@ -1261,6 +1261,12 @@ rakuten['利用日'] = rakuten['利用日'].where(rakuten['利用日'].str.conta
 # In[ ]:
 
 
+tmp_price.loc[~tmp_price['Open'].str.isnumeric(), 'Open'] = np.nan
+
+
+# In[ ]:
+
+
 # この方法でも可能だが、正しい使用法ではないらしく警告が出る
 kessan_table_15[kessan_table_15['希薄化後一株当り純利益'].str.contains('([^0-9.]*)', na=False)]
 

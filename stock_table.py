@@ -406,3 +406,102 @@ print('Next start from {0}'.format(start_index + increase_number))
 reading_code = stock.get_jpx_new_added_code()
 reading_code
 
+
+# # Yahooの銘柄一覧テーブルを取得
+
+# ## 株式
+
+# In[ ]:
+
+
+yahoo_stock_table = stock.get_stock_table_yahoojp()
+
+
+# In[ ]:
+
+
+len(yahoo_stock_table)
+
+
+# In[ ]:
+
+
+display(yahoo_stock_table)
+
+
+# In[ ]:
+
+
+yahoo_stock_table.columns = ['code', 'market', 'name', 'price', 'extra']
+
+
+# In[ ]:
+
+
+yahoo_stock_table.to_csv('{0}/yahoo_stock_table.csv'.format(csv_path))
+
+
+# ## ETF
+
+# In[ ]:
+
+
+yahoo_etf_table = stock.get_etf_table_yahoojp()
+
+
+# In[ ]:
+
+
+len(yahoo_etf_table)
+
+
+# In[ ]:
+
+
+yahoo_etf_table
+
+
+# In[ ]:
+
+
+yahoo_etf_table.columns = ['code', 'market', 'name', '連動対象', '価格更新日時','price',
+                           '前日比', '前日比率', '売買単位','運用会社', '信託報酬（税抜）']
+
+
+# In[ ]:
+
+
+yahoo_etf_table.to_csv('{0}/yahoo_etf_table.csv'.format(csv_path))
+
+
+# ## 連結
+
+# In[ ]:
+
+
+yahoo_table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+yahoo_table = yahoo_table.append(pd.read_csv('{0}/yahoo_etf_table.csv'.format(csv_path), index_col=0))
+yahoo_table = yahoo_table.sort_values(by=['code']).reset_index(drop=True)
+
+
+# In[ ]:
+
+
+display(yahoo_table)
+
+
+# ## コードのリスト作成
+
+# In[ ]:
+
+
+start_index = 0
+increase_number = 10
+end_index = start_index + increase_number
+
+# reading_code = stock.get_jpx_expro_code(start_index, end_index)
+reading_code = stock.get_yahoo_code(start_index, end_index)
+# reading_code = stock.get_yahoo_code(start_index)
+print(reading_code[-10:])
+print('Next start from {0}'.format(start_index + increase_number))
+

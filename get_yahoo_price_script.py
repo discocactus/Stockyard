@@ -15,10 +15,10 @@ import stock
 
 # csv_path = '/Users/Really/Stockyard/_csv'
 # price_path = '/Users/Really/Stockyard/_yahoo_csv'
-csv_path = 'D:\stockyard\_csv'
-price_path = 'D:\stockyard\_yahoo_csv'
-# csv_path = '/home/hideshi_honma/stockyard/_csv'
-# price_path = '/home/hideshi_honma/stockyard/_yahoo_csv'
+# csv_path = 'D:\stockyard\_csv'
+# price_path = 'D:\stockyard\_yahoo_csv'
+csv_path = '/home/hideshi_honma/stockyard/_csv'
+price_path = '/home/hideshi_honma/stockyard/_yahoo_csv'
 
 
 # # ヒストリカルデータの初回連続読み込み
@@ -75,6 +75,9 @@ for index in range(len(reading_code)):
             
         else:
             price = tmp_price # 価格以外の情報がなければそのまま
+
+        # 型変換 NaN が入る場合があるので価格列は float で統一
+        price = price.astype(float)
             
         try:
             # CSVで保存

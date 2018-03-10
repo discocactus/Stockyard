@@ -35,6 +35,13 @@ import stock
 importlib.reload(stock)
 
 
+# In[ ]:
+
+
+# pandas の最大表示列数を設定 (max_rows で表示行数の設定も可能)
+pd.set_option('display.max_columns', 30)
+
+
 # # データパスの設定
 
 # In[ ]:
@@ -44,56 +51,6 @@ importlib.reload(stock)
 # price_path = '/Users/Really/Stockyard/_yahoo_csv'
 csv_path = 'D:\stockyard\_csv'
 price_path = 'D:\stockyard\_yahoo_csv'
-
-
-# # Yahooの銘柄一覧テーブルを取得
-
-# In[ ]:
-
-
-yahoo_stock_table = stock.get_stock_table_yahoojp()
-
-
-# In[ ]:
-
-
-len(yahoo_stock_table)
-
-
-# In[ ]:
-
-
-display(yahoo_stock_table)
-
-
-# In[ ]:
-
-
-yahoo_stock_table.columns = ['code', 'market', 'data', 'price', 'extra']
-
-
-# In[ ]:
-
-
-yahoo_stock_table = yahoo_stock_table[['code', 'market', 'data', 'price']]
-
-
-# In[ ]:
-
-
-yahoo_stock_table.to_csv('{0}/yahoo_stock_table.csv'.format(csv_path))
-
-
-# In[ ]:
-
-
-pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
-
-
-# In[ ]:
-
-
-list(pd.read_csv('{0}/keep_failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())
 
 
 # # GCE環境での新規読み込み用に新規infoファイルの作成
@@ -142,7 +99,7 @@ done
 
 
 start_index = 0
-increase_number = 2
+increase_number = 50
 end_index = start_index + increase_number
 
 # reading_code = stock.get_jpx_expro_code(start_index, end_index)
@@ -189,6 +146,14 @@ reading_code = failed
 reading_code, len(reading_code)
 
 
+# In[ ]:
+
+
+# 保存したファイルから読み込む場合
+reading_code = list(pd.read_csv('{0}/keep_failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())
+reading_code, len(reading_code)
+
+
 # ## 連続読み込み書き込み
 
 # In[ ]:
@@ -227,6 +192,9 @@ for index in range(len(reading_code)):
             
         else:
             price = tmp_price # 価格以外の情報がなければそのまま
+            
+        # 型変換 NaN が入る場合があるので価格列は float で統一
+        price = price.astype(float)
             
         try:
             # CSVで保存
@@ -402,6 +370,9 @@ for index in range(len(reading_code)):
             
         price = price.append(new_price)
         
+        # 型変換 NaN が入る場合があるので価格列は float で統一
+        price = price.astype(float)
+        
         try:
             # CSVで保存
             price.to_csv('{0}/t_{1}.csv'.format(price_path, code))
@@ -491,6 +462,36 @@ pd.Series(keep_failed).to_csv('{0}/keep_failed.csv'.format(csv_path))
 
 # # 単一銘柄、保存なし版
 
+# In[ ]:
+
+
+url = 'https://info.finance.yahoo.co.jp/history/?code=1376.T&sy=1994&sm=7&sd=7&ey=1994&em=7&ed=31&tm=d'
+
+
+# In[ ]:
+
+
+tbls = pd.read_html(url, header=0, keep_default_na=False)
+
+
+# In[ ]:
+
+
+tbls[1]
+
+
+# In[ ]:
+
+
+tbls[1].dtypes
+
+
+# In[ ]:
+
+
+importlib.reload(stock)
+
+
 # ## 単一銘柄の読み込み
 
 # In[ ]:
@@ -499,8 +500,9 @@ pd.Series(keep_failed).to_csv('{0}/keep_failed.csv'.format(csv_path))
 code = 1376 # 銘柄コード
 
 # 読み込み期間の設定
-start = '1987-03-01'
-end = '1999-12-31'
+start = '1991-10-01'
+end = '1994-07-31'
+# end = input('end=')
 
 # ロガー設定
 start_time = dt.datetime.now()
@@ -524,6 +526,9 @@ try:
 
     else:
         price = tmp_price # 価格以外の情報がなければそのまま
+        
+    # 型変換 NaN が入る場合があるので価格列は float で統一
+    price = price.astype(float)
 
 except Exception as e:
     logging.warning('{0} {1}: {2}'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code, e))
@@ -557,6 +562,116 @@ price
 
 
 info
+
+
+# ## 重複行があったことがあるので削除
+
+# In[ ]:
+
+
+result = tmp_price[~tmp_price.isnull().any(axis=1)]
+
+
+# In[ ]:
+
+
+result = result.append(result.iloc[-1:, :])
+
+
+# In[ ]:
+
+
+result = result[~result.index.duplicated()]
+
+
+# In[ ]:
+
+
+result
+
+
+# ## 情報行を分割後の価格行に混入している文字列の特定と置換
+
+# 分割情報行の空値の列は np.nan として取得されるため数値は float になる  
+# 分割情報行が無ければそのまま int として取得される(調整後終値以外)  
+# 価格行の欠損値には --- が入っているため数値は str になる  
+# np.nan を代入できるのは float 型のみ
+
+# In[ ]:
+
+
+tbl = price.copy()
+
+
+# In[ ]:
+
+
+tbl
+
+
+# In[ ]:
+
+
+tbl.dtypes
+
+
+# In[ ]:
+
+
+tbl.loc['1991-10-28', 'Open']
+
+
+# In[ ]:
+
+
+type(tbl.loc['1991-10-28', 'Open'])
+
+
+# In[ ]:
+
+
+# 数値の列の数値以外の文字列 ('－' 等) を NaN に置換
+for col in tbl:
+    if tbl[col].dtypes == object:
+        tbl.loc[tbl[col].str.isnumeric() == False, col] = np.nan
+
+
+# In[ ]:
+
+
+# 型変換
+# np.nan は float 型のみ
+tbl = tbl.astype(float)
+
+
+# In[ ]:
+
+
+# csvに保存するまでならば np.nan ではなく "" に変換して型は気にせずに保存しておく方が良いかも?
+
+
+# In[ ]:
+
+
+tbl.to_csv('{0}/tbl.csv'.format(price_path))
+
+
+# In[ ]:
+
+
+tbl_csv = pd.read_csv('{0}/tbl.csv'.format(price_path), index_col=0)
+
+
+# In[ ]:
+
+
+tbl_csv
+
+
+# In[ ]:
+
+
+tbl_csv.dtypes
 
 
 # ## 単一銘柄の更新

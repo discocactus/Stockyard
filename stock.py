@@ -43,12 +43,14 @@ def get_jpx_new_added_code(start_index=0, end_index=None, csv_path=csv_path):
     
     
 def get_yahoo_code(start_index=0, end_index=None, csv_path=csv_path):
-    yahoo_code = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+    table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+    table = table.append(pd.read_csv('{0}/yahoo_etf_table.csv'.format(csv_path), index_col=0))
+    table = table.sort_values(by=['code']).reset_index(drop=True)
 
-    if (end_index == None) or (end_index > len(yahoo_code)):
-        end_index = len(yahoo_code)
+    if (end_index == None) or (end_index > len(table)):
+        end_index = len(table)
 
-    result = list(yahoo_code['code'][start_index : end_index])
+    result = list(table['code'][start_index : end_index])
 
     return result
 
@@ -88,6 +90,26 @@ def get_stock_table_yahoojp():
         if len(tables[2]) == 0:
             break
         result.append(tables[2])
+        p += 1
+        
+    result = pd.concat(result, ignore_index=True)
+        
+    return result
+
+
+def get_etf_table_yahoojp():
+    result = []
+    p = 1
+    base = 'https://stocks.finance.yahoo.co.jp/etf/list/?p={0}'
+
+    while True:
+        url = base.format(p)
+        # 'https://stocks.finance.yahoo.co.jp/etf/list/?p=1' # 2018-03-09 p=5まで
+        print('{0}: {1}'.format(p, url))
+        tables = get_table(url)
+        if len(tables[0]) == 0:
+            break
+        result.append(tables[0].iloc[:-1, :])
         p += 1
         
     result = pd.concat(result, ignore_index=True)
@@ -144,12 +166,25 @@ def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
 
 def extract_price(tmp_price):
     # null が存在する行を取り除いて価格データとする 参考 https://qiita.com/u1and0/items/fd2780813b690a40c197
-    result = tmp_price[~tmp_price.isnull().any(axis=1)].astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
-    # なぜか日付が重複した行が入る場合があるので確認、削除
-    if(result.index.duplicated().any()):
-        result = result[~result.index.duplicated()]
+    # result = tmp_price[~tmp_price.isnull().any(axis=1)] #.astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
+    tmp_price = tmp_price[~tmp_price.isnull().any(axis=1)]
         
-    return result
+    # なぜか日付が重複した行が入る場合があるので確認、削除
+    # if(result.index.duplicated().any()):
+    #     result = result[~result.index.duplicated()]
+    # result = result[~result.index.duplicated()]
+    tmp_price = tmp_price[~tmp_price.index.duplicated()]
+        
+    # 数値の列の数値以外の欠損値文字列 ('---' 等) を NaN に置換
+    # for col in result:
+    #     if result[col].dtypes == object:
+    #         result.loc[result[col].str.isnumeric() == False, col] = np.nan
+    for col in tmp_price:
+        if tmp_price[col].dtypes == object:
+            tmp_price.loc[tmp_price[col].str.isnumeric() == False, col] = np.nan
+        
+    # return result
+    return tmp_price
 
 
 def reform_info(tmp_info, code, stock_name):
