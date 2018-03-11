@@ -432,7 +432,13 @@ display(yahoo_stock_table)
 # In[ ]:
 
 
-yahoo_stock_table.columns = ['code', 'market', 'name', 'price', 'extra']
+yahoo_stock_table.dtypes
+
+
+# In[ ]:
+
+
+type(yahoo_stock_table['code'][0])
 
 
 # In[ ]:
@@ -464,8 +470,25 @@ yahoo_etf_table
 # In[ ]:
 
 
-yahoo_etf_table.columns = ['code', 'market', 'name', '連動対象', '価格更新日時','price',
-                           '前日比', '前日比率', '売買単位','運用会社', '信託報酬（税抜）']
+yahoo_etf_table.dtypes
+
+
+# In[ ]:
+
+
+type(yahoo_etf_table['code'][0])
+
+
+# In[ ]:
+
+
+yahoo_etf_table.loc[yahoo_etf_table['code'].str.isnumeric() == False, :]
+
+
+# In[ ]:
+
+
+yahoo_etf_table['code'] = yahoo_etf_table['code'].astype(int)
 
 
 # In[ ]:
@@ -479,8 +502,18 @@ yahoo_etf_table.to_csv('{0}/yahoo_etf_table.csv'.format(csv_path))
 # In[ ]:
 
 
+yahoo_table = yahoo_stock_table.append(yahoo_etf_table)
+yahoo_table = yahoo_table.drop_duplicates('code')
+yahoo_table = yahoo_table.sort_values(by=['code']).reset_index(drop=True)
+
+
+# In[ ]:
+
+
+# 保存済み CSV から
 yahoo_table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
 yahoo_table = yahoo_table.append(pd.read_csv('{0}/yahoo_etf_table.csv'.format(csv_path), index_col=0))
+yahoo_table = yahoo_table.drop_duplicates('code')
 yahoo_table = yahoo_table.sort_values(by=['code']).reset_index(drop=True)
 
 
@@ -488,6 +521,26 @@ yahoo_table = yahoo_table.sort_values(by=['code']).reset_index(drop=True)
 
 
 display(yahoo_table)
+
+
+# In[ ]:
+
+
+yahoo_table.to_csv('{0}/yahoo_table.csv'.format(csv_path))
+
+
+# In[ ]:
+
+
+# market別で集計
+yahoo_table.groupby('market').count()
+
+
+# In[ ]:
+
+
+# market_code別で集計
+yahoo_table.groupby('market_code').count()
 
 
 # ## コードのリスト作成
@@ -504,4 +557,46 @@ reading_code = stock.get_yahoo_code(start_index, end_index)
 # reading_code = stock.get_yahoo_code(start_index)
 print(reading_code[-10:])
 print('Next start from {0}'.format(start_index + increase_number))
+
+
+# In[ ]:
+
+
+yahoo_table.loc[0:1, ['code', 'market_code']]
+
+
+# In[ ]:
+
+
+def get_yahoo_code(start_index=0, end_index=None, csv_path=csv_path):
+    table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
+    table = table.append(pd.read_csv('{0}/yahoo_etf_table.csv'.format(csv_path), index_col=0))
+    table = table.drop_duplicates('code')
+    table = table.sort_values(by=['code']).reset_index(drop=True)
+
+    if (end_index == None) or (end_index > len(table)):
+        end_index = len(table)
+
+    result = table.loc[start_index:end_index, ['code', 'market_code']]
+
+    return result
+
+
+# In[ ]:
+
+
+start_index = 0
+end_index = 10
+
+
+# In[ ]:
+
+
+get_yahoo_code(start_index, end_index)
+
+
+# In[ ]:
+
+
+yahoo_table.loc[yahoo_table['code']==1384, 'market_code'].values[0]
 

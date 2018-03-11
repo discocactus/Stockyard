@@ -45,12 +45,14 @@ def get_jpx_new_added_code(start_index=0, end_index=None, csv_path=csv_path):
 def get_yahoo_code(start_index=0, end_index=None, csv_path=csv_path):
     table = pd.read_csv('{0}/yahoo_stock_table.csv'.format(csv_path), index_col=0)
     table = table.append(pd.read_csv('{0}/yahoo_etf_table.csv'.format(csv_path), index_col=0))
+    table = table.drop_duplicates('code')
     table = table.sort_values(by=['code']).reset_index(drop=True)
 
     if (end_index == None) or (end_index > len(table)):
         end_index = len(table)
 
     result = list(table['code'][start_index : end_index])
+    # result = table.loc[start_index:end_index, ['code', 'market_code']]
 
     return result
 
@@ -93,6 +95,16 @@ def get_stock_table_yahoojp():
         p += 1
         
     result = pd.concat(result, ignore_index=True)
+    
+    result.columns = ['code', 'market', 'name', 'price', 'extra']
+    
+    result['code'] = result['code'].astype(int)
+    
+    result['market_code'] = 'T'
+    result.loc[result['market'].fillna("").str.contains('名'), 'market_code'] = 'N'
+    result.loc[result['market'].fillna("").str.contains('大'), 'market_code'] = 'O'
+    result.loc[result['market'].fillna("").str.contains('札'), 'market_code'] = 'S'
+    result.loc[result['market'].fillna("").str.contains('福'), 'market_code'] = 'F'
         
     return result
 
@@ -113,14 +125,25 @@ def get_etf_table_yahoojp():
         p += 1
         
     result = pd.concat(result, ignore_index=True)
+    
+    result.columns = ['code', 'market', 'name', '連動対象', '価格更新日時','price',
+                      '前日比', '前日比率', '売買単位','運用会社', '信託報酬（税抜）']
+    
+    result['code'] = result['code'].astype(int)
+    
+    result['market_code'] = 'T'
+    result.loc[result['market'].fillna("").str.contains('名'), 'market_code'] = 'N'
+    result.loc[result['market'].fillna("").str.contains('大'), 'market_code'] = 'O'
+    result.loc[result['market'].fillna("").str.contains('札'), 'market_code'] = 'S'
+    result.loc[result['market'].fillna("").str.contains('福'), 'market_code'] = 'F'
         
     return result
 
   
-def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017-01-01'
+def get_price_yahoojp(code, market_code, start=None, end=None, interval='d'): # start = '2017-01-01'
     # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
     # http://jbclub.xii.jp/?p=598
-    base = 'http://info.finance.yahoo.co.jp/history/?code={0}.T&{1}&{2}&tm={3}&p={4}'
+    base = 'http://info.finance.yahoo.co.jp/history/?code={0}.{1}&{2}&{3}&tm={4}&p={5}'
     
     start = pd.to_datetime(start) # Timestamp('2017-01-01 00:00:00')
 
@@ -137,7 +160,7 @@ def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
         raise ValueError("Invalid interval: valid values are 'd', 'w', 'm' and 'v'")
 
     while True:
-        url = base.format(code, start, end, interval, p)
+        url = base.format(code, market_code, start, end, interval, p)
         # print(url)
         # https://info.finance.yahoo.co.jp/history/?code=7203.T&sy=2000&sm=1&sd=1&ey=2017&em=10&ed=13&tm=d&p=1
         tables = get_table(url)
@@ -165,25 +188,19 @@ def get_price_yahoojp(code, start=None, end=None, interval='d'): # start = '2017
 
 
 def extract_price(tmp_price):
-    # null が存在する行を取り除いて価格データとする 参考 https://qiita.com/u1and0/items/fd2780813b690a40c197
-    # result = tmp_price[~tmp_price.isnull().any(axis=1)] #.astype(float).astype(int) # この場合、"~"は "== False" とするのと同じこと
     tmp_price = tmp_price[~tmp_price.isnull().any(axis=1)]
         
     # なぜか日付が重複した行が入る場合があるので確認、削除
-    # if(result.index.duplicated().any()):
-    #     result = result[~result.index.duplicated()]
-    # result = result[~result.index.duplicated()]
     tmp_price = tmp_price[~tmp_price.index.duplicated()]
         
     # 数値の列の数値以外の欠損値文字列 ('---' 等) を NaN に置換
-    # for col in result:
-    #     if result[col].dtypes == object:
-    #         result.loc[result[col].str.isnumeric() == False, col] = np.nan
     for col in tmp_price:
         if tmp_price[col].dtypes == object:
             tmp_price.loc[tmp_price[col].str.isnumeric() == False, col] = np.nan
+            
+    # NaN が入る場合があるので価格列は float で統一
+    tmp_price = tmp_price.astype(float)
         
-    # return result
     return tmp_price
 
 

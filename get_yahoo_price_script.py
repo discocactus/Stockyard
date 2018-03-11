@@ -51,6 +51,7 @@ start_time = dt.datetime.now()
 logging.basicConfig(filename='get_price_{0}.log'.format(start_time.strftime('%Y-%m-%d')), filemode='w', level=logging.INFO)
 logging.info('{0} get_price Started'.format(start_time.strftime('%Y-%m-%d %H:%M:%S')))
 
+yahoo_table = pd.read_csv('{0}/yahoo_table.csv'.format(csv_path), index_col=0)
 info = stock.get_yahoo_info() # 保存済み info の読み込み
 failed = [] # 読み込みに失敗した銘柄のコードを書き込むリストを作成
 save_failed = [] # 保存のみ失敗した分
@@ -58,26 +59,22 @@ save_failed = [] # 保存のみ失敗した分
 # 連続読み込み書き込み
 for index in range(len(reading_code)):
     code = reading_code[index]
+    market_code = yahoo_table.loc[yahoo_table['code'] == code, 'market_code'].values[0]
     
     try:
         time.sleep(1)
         
         # Yahooファイナスンスから時系列情報と銘柄名を取得
-        tmp_price, stock_name = stock.get_price_yahoojp(code, start=start, end=end)
-        
-        # 価格と価格以外の情報を分離
+        tmp_price, stock_name = stock.get_price_yahoojp(code, market_code, start=start, end=end)
+
+        # 価格以外の情報を抽出
         tmp_info = tmp_price[tmp_price.isnull().any(axis=1)].reset_index()
         if len(tmp_info) > 0:
             new_info = stock.reform_info(tmp_info, code, stock_name)
             info = info.append(new_info, ignore_index=True)
-        
-            price = stock.extract_price(tmp_price)
-            
-        else:
-            price = tmp_price # 価格以外の情報がなければそのまま
 
-        # 型変換 NaN が入る場合があるので価格列は float で統一
-        price = price.astype(float)
+        # 価格情報の整形と代入
+        price = stock.extract_price(tmp_price)
             
         try:
             # CSVで保存
