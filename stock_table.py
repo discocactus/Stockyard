@@ -62,7 +62,7 @@ csv_path = 'D:\stockyard\_csv'
 # In[ ]:
 
 
-file_month = 1802
+file_month = 1803
 
 
 # In[ ]:
@@ -222,8 +222,8 @@ pd.DataFrame([
 # In[ ]:
 
 
-new_file_month = 1802
-old_file_month = 1801
+new_file_month = 1803
+old_file_month = 1802
 
 
 # In[ ]:

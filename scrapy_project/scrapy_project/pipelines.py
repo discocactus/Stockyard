@@ -3,6 +3,7 @@ from scrapy.exceptions import DropItem
 import csv
 import re
 import pandas as pd
+import datetime
 
 
 class ValidationPipeline(object):
@@ -21,15 +22,19 @@ class ValidationPipeline(object):
 
 class csvPipeline(object):
     """
-    Itemをcsvに保存するPipeline。
+    Itemをcsvに保存するPipeline
     """
+    # csvPipeline.file_name
+    ym = datetime.date.today().strftime('%Y-%m')
+    file_name = 'yahoo_fundamental_{0}.csv'.format(ym)
+    
     def open_spider(self, spider):
         """
-        Spiderの開始時に'yahoo_fundamental.csv'が存在しない場合は作成する。
+        Spiderの開始時に'yahoo_fundamental_yyyy-mm.csv'が存在しない場合は作成する。
         """
 
         try:
-            with open('yahoo_fundamental.csv', 'x', newline='', encoding='utf-8') as f:
+            with open(csvPipeline.file_name, 'x', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, ['date',
                                             'code',
                                             'name',
@@ -62,24 +67,24 @@ class csvPipeline(object):
                                             ])
                 writer.writeheader()
         except:
-            print('\n\n --- File exists: yahoo_fundamental.csv ---\n\n')
+            print('\n\n --- File exists: {0} ---\n\n'.format(csvPipeline.file_name))
 
 
     def close_spider(self, spider):
         """
         Spiderの終了時の動作。
         """
-        df = pd.read_csv('yahoo_fundamental.csv')
+        df = pd.read_csv(csvPipeline.file_name)
         df = df.sort_values(['date', 'code', 'get'])
         df = df.drop_duplicates(['date', 'code'], keep='last').reset_index(drop=True)
-        df.to_csv('yahoo_fundamental.csv', index=False)
+        df.to_csv(csvPipeline.file_name, index=False)
 
 
     def process_item(self, item, spider):
         """
         Itemをファイルに挿入する。
         """
-        with open('yahoo_fundamental.csv', 'a', newline='', encoding='utf-8') as f:
+        with open(csvPipeline.file_name, 'a', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, ['date',
                                         'code',
                                         'name',

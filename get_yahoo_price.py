@@ -2,14 +2,24 @@
 # coding: utf-8
 
 # # Memo
-2939 8287 マックスバリュ西日本 までyahooから銘柄名を取得
-2940 から 2959 までは東証のエクセル由来のテーブルから取得に変更
-2960 8345 岩手銀行 からyahooからの取得に戻した
 
-3318 メガネスーパー 10/26 上場廃止
-Pro Market銘柄はYahooにはないらしい
+# In[ ]:
+
+
+# Yahoo の銘柄一覧から作成した取得銘柄リストを使用
+# 2018-03-16 取得済み分についてファイル名接頭辞を t_ から y_ に変更
+# 取得スクリプト内もファイル名接頭辞を変更
+
+
 # # TODO
-11/10以前の読み込み文はAdjCloseがInt型で保存されているので、Float型に再計算
+
+# In[ ]:
+
+
+# 初回取得と更新取得の統合
+# 株式分割・併合が行われた場合の調整後終値の再取得または再計算
+
+
 # # import
 
 # In[ ]:
@@ -256,7 +266,7 @@ for index in range(len(reading_code)):
             
         try:
             # CSVで保存
-            price.to_csv('{0}/t_{1}.csv'.format(price_path, code))
+            price.to_csv('{0}/y_{1}.csv'.format(price_path, code))
             info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
           
             print('{0}: Success {1}'.format(index, code))
@@ -430,7 +440,7 @@ for index in range(len(reading_code)):
         
         try:
             # CSVで保存
-            price.to_csv('{0}/t_{1}.csv'.format(price_path, code))
+            price.to_csv('{0}/y_{1}.csv'.format(price_path, code))
             info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
           
             print('{0}: Success {1}'.format(index, code))
@@ -475,7 +485,7 @@ for i in range(increase_number):
 # TODO これをcsvで実現する方法を考える
 for i in range(increase_number):
     print('[{0}]'.format(reading_code[i]))
-    print(sql.statement_query('select * from t_{0} order by Date desc limit 3'.format(reading_code[i])))
+    print(sql.statement_query('select * from y_{0} order by Date desc limit 3'.format(reading_code[i])))
 
 
 # In[ ]:
@@ -834,4 +844,88 @@ info[info.duplicated()]
 
 
 info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
+
+
+# # ファイル名の接頭辞 t\_ を y\_ に変更
+
+# In[ ]:
+
+
+import pathlib
+
+
+# ## pathlib について
+
+# In[ ]:
+
+
+# root = pathlib.Path(__file__) # 実行スクリプトのファイル名のPathオブジェクト
+root = pathlib.Path()
+root
+
+
+# In[ ]:
+
+
+# 絶対パスの取得
+abs_root = root.resolve()
+abs_root
+
+
+# In[ ]:
+
+
+# 親ディレクトリ
+abs_root.parent
+
+
+# In[ ]:
+
+
+# 親ディレクトリに指定したパスが存在するかどうか
+abs_root.parent.joinpath('tax_2017').exists()
+
+
+# In[ ]:
+
+
+# 文字列からPathオブジェクトを作成
+csv_dir = pathlib.Path('D:\stockyard\_csv')
+csv_dir
+
+
+# ## パスの設定
+
+# In[ ]:
+
+
+# csv_path = '/Users/Really/Stockyard/_csv'
+# price_path = '/Users/Really/Stockyard/_yahoo_csv'
+csv_path = 'D:\stockyard\_csv'
+price_path = 'D:\stockyard\_yahoo_csv'
+
+
+# In[ ]:
+
+
+csv_dir = pathlib.Path(csv_path)
+csv_dir
+
+
+# In[ ]:
+
+
+price_dir = pathlib.Path(price_path)
+price_dir
+
+
+# ## 置換
+
+# In[ ]:
+
+
+for price_file in price_dir.iterdir():
+    # pathlibのパスは文字列ではない。かつpathlibにも.replaceメソッドがあるので注意。
+    replaced = str(price_file).replace('t_', 'y_')
+    price_file.rename(replaced)
 

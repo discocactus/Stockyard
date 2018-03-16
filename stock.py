@@ -65,7 +65,7 @@ def get_yahoo_info(csv_path=csv_path):
 
     
 def get_yahoo_price(code, price_path=price_path):
-    result = pd.read_csv('{0}/t_{1}.csv'.format(price_path, code), index_col=0)
+    result = pd.read_csv('{0}/y_{1}.csv'.format(price_path, code), index_col=0)
     result.index = pd.to_datetime(result.index)
 
     return result

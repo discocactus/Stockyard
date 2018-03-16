@@ -78,7 +78,7 @@ for index in range(len(reading_code)):
             
         try:
             # CSVで保存
-            price.to_csv('{0}/t_{1}.csv'.format(price_path, code))
+            price.to_csv('{0}/y_{1}.csv'.format(price_path, code))
             info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
           
             print('{0}: Success {1}'.format(index, code))
