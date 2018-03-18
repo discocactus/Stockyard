@@ -140,25 +140,37 @@ def get_etf_table_yahoojp():
     return result
 
   
-def get_price_yahoojp(code, market_code, start=None, end=None, interval='d'): # start = '2017-01-01'
-    # http://sinhrks.hatenablog.com/entry/2015/02/04/002258
-    # http://jbclub.xii.jp/?p=598
-    base = 'http://info.finance.yahoo.co.jp/history/?code={0}.{1}&{2}&{3}&tm={4}&p={5}'
+def get_price_yahoojp(code, market_code, start=None, end=None, interval='d'):
+    # 参考: http://sinhrks.hatenablog.com/entry/2015/02/04/002258
+    # 参考: http://jbclub.xii.jp/?p=598
     
-    start = pd.to_datetime(start) # Timestamp('2017-01-01 00:00:00')
+    # urlを準備
+    base = 'http://info.finance.yahoo.co.jp/history/?code={0}.{1}&{2}&{3}&tm={4}&p={5}'
 
+    # 取得期間の設定
+    # start
+    if start == None:
+        start = pd.to_datetime('1980-01-01')
+    else :
+        start = pd.to_datetime(start)
+    start = 'sy={0}&sm={1}&sd={2}'.format(start.year, start.month, start.day) # 'sy=2017&sm=1&sd=1'
+    
+    # end
     if end == None:
         end = pd.to_datetime(pd.datetime.now())
     else :
         end = pd.to_datetime(end)
-    start = 'sy={0}&sm={1}&sd={2}'.format(start.year, start.month, start.day) # 'sy=2017&sm=1&sd=1'
     end = 'ey={0}&em={1}&ed={2}'.format(end.year, end.month, end.day)
+    
+    # 変数の設定
     p = 1
     tmp_result = []
 
+    # インターバルの設定
     if interval not in ['d', 'w', 'm', 'v']:
         raise ValueError("Invalid interval: valid values are 'd', 'w', 'm' and 'v'")
 
+    # webサイトから価格テーブルを取得
     while True:
         url = base.format(code, market_code, start, end, interval, p)
         # print(url)
@@ -171,8 +183,8 @@ def get_price_yahoojp(code, market_code, start=None, end=None, interval='d'): # 
         p += 1
         # print(p)
         
+    # 整形処理
     result = pd.concat(tmp_result, ignore_index=True) # インデックスをゼロから振り直す
-
     result.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'] # 列名を変更
     if interval == 'm':
         result['Date'] = pd.to_datetime(result['Date'], format='%Y年%m月')
@@ -181,6 +193,7 @@ def get_price_yahoojp(code, market_code, start=None, end=None, interval='d'): # 
     result = result.set_index('Date') # インデックスを日付に変更
     result = result.sort_index()
     
+    # 銘柄名を変数に格納
     stock_name = tables[0].columns[0]
     # print([code, stock_name])
     

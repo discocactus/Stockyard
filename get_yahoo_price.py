@@ -9,6 +9,7 @@
 # Yahoo の銘柄一覧から作成した取得銘柄リストを使用
 # 2018-03-16 取得済み分についてファイル名接頭辞を t_ から y_ に変更
 # 取得スクリプト内もファイル名接頭辞を変更
+# 初回取得と更新取得の統合 -> スクリプトファイル作成済み
 
 
 # # TODO
@@ -16,8 +17,9 @@
 # In[ ]:
 
 
-# 初回取得と更新取得の統合
+# 価格更新取得用2018年分ファイルと全期間ファイルの結合
 # 株式分割・併合が行われた場合の調整後終値の再取得または再計算
+# 取得時エラー表示: 更新するデータがないだけなのか、それ以外のエラーなのか区別できるとよいのだけど
 
 
 # # import
@@ -32,6 +34,7 @@ import datetime as dt
 import time
 import importlib
 import logging
+import pathlib
 from retry import retry
 # import traceback
 # from retrying import retry
@@ -61,88 +64,6 @@ pd.set_option('display.max_columns', 30)
 # price_path = '/Users/Really/Stockyard/_yahoo_csv'
 csv_path = 'D:\stockyard\_csv'
 price_path = 'D:\stockyard\_yahoo_csv'
-
-
-# # GCE環境調整用
-
-# ## GCE環境での新規読み込み用に新規infoファイルの作成
-
-# In[ ]:
-
-
-info = stock.get_yahoo_info()
-
-
-# In[ ]:
-
-
-a = pd.DataFrame(index=[], columns=['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'])
-a
-
-
-# In[ ]:
-
-
-a = a.append(info.iloc[1,1:], ignore_index = True)
-a
-
-
-# In[ ]:
-
-
-# 出力後、ファイル名は適宜変更
-a.to_csv('{0}/yahoo_info_gce.csv'.format(csv_path))
-
-
-# ## 不要なインデックス列が追加されてしまったので整形
-
-# In[ ]:
-
-
-info = pd.read_csv("D:\downloads\yahoo_info(1).csv", index_col=0)
-
-
-# In[ ]:
-
-
-info['Date'] = pd.to_datetime(info['Date'])
-
-
-# In[ ]:
-
-
-info
-
-
-# In[ ]:
-
-
-info = info[['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']]
-
-
-# In[ ]:
-
-
-info = info.drop_duplicates()
-
-
-# In[ ]:
-
-
-info = info.sort_values(by=['Code', 'Date']).reset_index(drop=True)
-
-
-# In[ ]:
-
-
-info.to_csv('D:\downloads\yahoo_info.csv')
-
-
-# In[ ]:
-
-
-info_csv = pd.read_csv("D:\downloads\yahoo_info.csv", index_col=0)
-info_csv
 
 
 # # ヒストリカルデータの初回連続読み込み
@@ -398,6 +319,18 @@ reading_code, len(reading_code)
 # In[ ]:
 
 
+pd.to_datetime(pd.datetime.now())
+
+
+# In[ ]:
+
+
+pd.to_datetime('2018-03-18')
+
+
+# In[ ]:
+
+
 end = None  # 読み込み終了日
 
 # ロガー設定
@@ -421,7 +354,6 @@ for index in range(len(reading_code)):
         # 何か問題があるようなら最終更新日以降のデータがない場合にパスする処理を考える
         # 現状ではYahooにデータが無い場合、"No objects to concatenate" が帰って来る
         price = stock.get_yahoo_price(code)
-        last_date = price.index[-1]
         start = str((price.index[-1] + offsets.Day()).date())
         
         # Yahooファイナスンスから時系列情報と銘柄名を取得
@@ -433,10 +365,11 @@ for index in range(len(reading_code)):
             new_info = stock.reform_info(tmp_info, code, stock_name)
             info = info.append(new_info, ignore_index=True)
         
-            new_price = stock.extract_price(tmp_price)
-        
         # 価格情報の整形と代入
-        price = stock.extract_price(tmp_price)
+        new_price = stock.extract_price(tmp_price)
+
+        # 取得済み分と更新分を結合
+        price = price.append(new_price)
         
         try:
             # CSVで保存
@@ -848,12 +781,6 @@ info.to_csv('{0}/yahoo_info.csv'.format(csv_path))
 
 # # ファイル名の接頭辞 t\_ を y\_ に変更
 
-# In[ ]:
-
-
-import pathlib
-
-
 # ## pathlib について
 
 # In[ ]:
@@ -867,7 +794,7 @@ root
 # In[ ]:
 
 
-# 絶対パスの取得
+# 絶対パスの取得、シンボリックリンクも解決
 abs_root = root.resolve()
 abs_root
 
@@ -928,4 +855,127 @@ for price_file in price_dir.iterdir():
     # pathlibのパスは文字列ではない。かつpathlibにも.replaceメソッドがあるので注意。
     replaced = str(price_file).replace('t_', 'y_')
     price_file.rename(replaced)
+
+
+# # GCE環境調整用
+
+# ## GCE環境での新規読み込み用に新規infoファイルの作成
+
+# In[ ]:
+
+
+info = stock.get_yahoo_info()
+
+
+# In[ ]:
+
+
+a = pd.DataFrame(index=[], columns=['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose'])
+a
+
+
+# In[ ]:
+
+
+a = a.append(info.iloc[1,1:], ignore_index = True)
+a
+
+
+# In[ ]:
+
+
+# 出力後、ファイル名は適宜変更
+a.to_csv('{0}/yahoo_info_gce.csv'.format(csv_path))
+
+
+# ## infoファイルに不要なインデックス列が追加されてしまったので整形
+
+# In[ ]:
+
+
+info = pd.read_csv("D:\downloads\yahoo_info(1).csv", index_col=0)
+
+
+# In[ ]:
+
+
+info['Date'] = pd.to_datetime(info['Date'])
+
+
+# In[ ]:
+
+
+info
+
+
+# In[ ]:
+
+
+info = info[['Code', 'StockName', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']]
+
+
+# In[ ]:
+
+
+info = info.drop_duplicates()
+
+
+# In[ ]:
+
+
+info = info.sort_values(by=['Code', 'Date']).reset_index(drop=True)
+
+
+# In[ ]:
+
+
+info.to_csv('D:\downloads\yahoo_info.csv')
+
+
+# In[ ]:
+
+
+info_csv = pd.read_csv("D:\downloads\yahoo_info.csv", index_col=0)
+info_csv
+
+
+# ## 定期更新用に2018年分のみの価格ファイルを作成
+
+# In[ ]:
+
+
+price_dir = pathlib.Path(price_path)
+price_dir
+
+
+# In[ ]:
+
+
+new_dir = pathlib.Path('D:\stockyard\_yahoo_csv_2018')
+new_dir
+
+
+# In[ ]:
+
+
+for price_file in price_dir.iterdir():
+    # print(new_dir / price_file.name)
+    price = pd.read_csv(price_file, index_col=0)
+    price.index = pd.to_datetime(price.index)
+    price_2018 = price['2018-01-01':]
+    price_2018.to_csv(new_dir / price_file.name)
+
+
+# In[ ]:
+
+
+pd.read_csv(new_dir / price_file.name, index_col=0)
+
+
+# # 新規取得と更新の統合スクリプト
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic('writefile', 'get_yahoo_price_script.py', "\n\n# coding: utf-8\n\nimport numpy as np\nimport pandas as pd\nimport pandas.tseries.offsets as offsets\nimport datetime as dt\nimport time\nimport importlib\nimport logging\nfrom retry import retry\n\nimport stock\n\n\n# パスの設定\n# csv_path = '/Users/Really/Stockyard/_csv'\n# price_path = '/Users/Really/Stockyard/_yahoo_csv'\n# csv_path = 'D:\\stockyard\\_csv'\n# price_path = 'D:\\stockyard\\_yahoo_csv'\ncsv_path = '/home/hideshi_honma/stockyard/_csv'\nprice_path = '/home/hideshi_honma/stockyard/_yahoo_csv'\n\n\n# 読み込むコードのリストを作成\nstart_index = input('start_index=')\nif start_index == 'failed':\n    reading_code = list(\n        pd.read_csv('{0}/failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())\nelif start_index == 'save_failed':\n    reading_code = list(\n        pd.read_csv('{0}/save_failed.csv'.format(csv_path), header=None, index_col=0).values.flatten())\nelse:\n    start_index = int(start_index)\n    increase_number = int(input('increase_number='))\n    end_index = start_index + increase_number\n    reading_code = stock.get_yahoo_code(start_index, end_index)\n    print('tail 10: {0}'.format(reading_code[-10:]))\n    print('Next start from {0}'.format(start_index + increase_number))\n\n\n# 読み込み期間の設定\nstart = input('start_date (none -> 1980-01-01 or update) =')\nend = input('end_date (none -> today) =')\n\n# ロガー設定\nstart_time = dt.datetime.now()\nlogging.basicConfig(filename='get_price_{0}.log'.format(start_time.strftime('%Y-%m-%d')), filemode='w', level=logging.INFO)\nlogging.info('{0} get_price Started'.format(start_time.strftime('%Y-%m-%d %H:%M:%S')))\n\n# 既存ファイルの読み込み\nyahoo_table = pd.read_csv('{0}/yahoo_table.csv'.format(csv_path), index_col=0)\ninfo = stock.get_yahoo_info() # 保存済み info の読み込み\n\n# 変数の設定\nfailed = [] # 読み込みに失敗した銘柄のコードを書き込むリストを作成\nsave_failed = [] # 保存のみ失敗した分\n\n\n# 連続取得保存ループ\nfor index in range(len(reading_code)):\n    code = reading_code[index]\n    market_code = yahoo_table.loc[yahoo_table['code'] == code, 'market_code'].values[0]\n\n    # 既存価格ファイルの読み込み\n    try:\n        price = stock.get_yahoo_price(code)\n        start = str((price.index[-1] + offsets.Day()).date())\n    except Exception as e:\n        logging.warning('{0} {1}: {2}'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code, e))\n        print('{0}: File does not exist in {1}'.format(index, code))\n        price = pd.DataFrame()\n    \n    # 取得、整形、保存\n    try:\n        time.sleep(1)\n        \n        # Yahooファイナスンスから時系列情報と銘柄名を取得\n        tmp_price, stock_name = stock.get_price_yahoojp(code, market_code, start=start, end=end)\n\n        # 価格以外の情報を抽出\n        tmp_info = tmp_price[tmp_price.isnull().any(axis=1)].reset_index()\n        if len(tmp_info) > 0:\n            new_info = stock.reform_info(tmp_info, code, stock_name)\n            info = info.append(new_info, ignore_index=True)\n\n        # 価格情報の整形と代入\n        new_price = stock.extract_price(tmp_price)\n\n        # 既存分と更新分を結合\n        price = price.append(new_price)\n            \n        # 保存\n        try:\n            price.to_csv('{0}/y_{1}.csv'.format(price_path, code))\n            info.to_csv('{0}/yahoo_info.csv'.format(csv_path))\n          \n            print('{0}: Success {1}'.format(index, code))\n            \n        # 保存に失敗した場合の処理\n        except Exception as e:\n            logging.warning('{0} {1}: {2}'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code, e))\n            save_failed.append(code)\n            print('{0}: Failed in {1} at Save Data'.format(index, code))\n            print(e)\n            \n    # 読み込みまたは整形に失敗した場合の処理\n    except Exception as e:\n        logging.warning('{0} {1}: {2}'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), code, e))\n        failed.append(code)\n        print('{0}: Failed in {1} at get_price'.format(index, code))\n        print(e)\n# ループ終了\n\n\n# 最後にinfoの重複と順序を整理してから再度保存\ninfo = info.drop_duplicates()\ninfo = info.sort_values(by=['Code', 'Date']).reset_index(drop=True)\ninfo.to_csv('{0}/yahoo_info.csv'.format(csv_path))\n\n# 失敗情報の表示\nprint('Failed in {0} stocks at get:'.format(len(failed)))\nprint(failed)\nprint('Failed in {0} stocks at save:'.format(len(save_failed)))\nprint(save_failed)\n\n# 失敗分の銘柄コードをcsvに保存 (履歴なし随時処理)\npd.Series(failed).to_csv('{0}/failed.csv'.format(csv_path))\npd.Series(save_failed).to_csv('{0}/save_failed.csv'.format(csv_path))\n\n# 終了ログ\nlogging.info('{0} get_price Finished'.format(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))")
 
