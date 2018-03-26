@@ -279,3 +279,25 @@ def add_processed_price(price_table):
     # price_table['log_ratio_range'] = (np.log(price_table['High']) - np.log(price_table['Low'])) / np.log(price_table['Open']) * 100
     
     return price_table
+
+
+def calc_adj_close(code):
+    info = get_yahoo_info()
+    price = get_yahoo_price(code)
+    
+    if info['Code'].isin([code]).any():
+        info['s_rate'] = info['Open'].str.extract('-> ([0-9.]*)株', expand=True).astype(float)
+        info = info[info['Code'] == code].set_index('Date')
+
+        price['s_rate'] = info['s_rate']
+        price['s_rate'] = price['s_rate'].fillna(1)
+        price['a_rate'] = 1.0
+        # yahoo の正確な計算式は不明。誤差が発生する銘柄もある。桁数だけの問題ではなさそう。
+        for i in reversed(range(len(price) - 1)):
+            price['a_rate'][i] = price['a_rate'][i + 1] / price['s_rate'][i + 1]
+        price['AdjClose'] = np.round(price['Close'] * price['a_rate'], 2)
+        price = price[['Open', 'High', 'Low', 'Close', 'Volume', 'AdjClose']]
+    else:
+        print('code {0} has no info.'.format(code))
+    
+    return price

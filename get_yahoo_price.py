@@ -20,6 +20,7 @@
 # 価格更新取得用2018年分ファイルと全期間ファイルの結合
 # 株式分割・併合が行われた場合の調整後終値の再取得または再計算
 # 取得時エラー表示: 更新するデータがないだけなのか、それ以外のエラーなのか区別できるとよいのだけど
+# インデックス等、列数が異なる銘柄の取得
 
 
 # # import
@@ -319,18 +320,6 @@ reading_code, len(reading_code)
 # In[ ]:
 
 
-pd.to_datetime(pd.datetime.now())
-
-
-# In[ ]:
-
-
-pd.to_datetime('2018-03-18')
-
-
-# In[ ]:
-
-
 end = None  # 読み込み終了日
 
 # ロガー設定
@@ -465,7 +454,7 @@ pd.Series(keep_failed).to_csv('{0}/keep_failed.csv'.format(csv_path))
 # In[ ]:
 
 
-url = 'https://info.finance.yahoo.co.jp/history/?code=1376.T&sy=1994&sm=7&sd=7&ey=1994&em=7&ed=31&tm=d'
+url = 'https://info.finance.yahoo.co.jp/history/?code=38109.T&sy=1983&sm=2&sd=16&ey=2018&em=3&ed=18&tm=d&p=1'
 
 
 # In[ ]:
@@ -497,7 +486,7 @@ importlib.reload(stock)
 # In[ ]:
 
 
-code = 1431 # 銘柄コード
+code = 38109 # 銘柄コード
 
 # 読み込み期間の設定
 start = '1980-01-01'
