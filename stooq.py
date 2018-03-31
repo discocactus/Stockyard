@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import wget
 import pathlib
 from retry import retry
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.select import Select
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
@@ -314,4 +317,19 @@ plt.plot(x, (y10.oil[plot_start:] / y10.oil[plot_start]), color='brown', label='
 plt.plot(x, (y10.gold[plot_start:] / y10.gold[plot_start]), color='orange', label='gold')
 plt.legend(loc='upper left')
 plt.show()
+
+
+# # selenium
+
+# In[ ]:
+
+
+# ChromeのWebDriverオブジェクトを作成する
+driver = webdriver.Chrome()
+
+
+# In[ ]:
+
+
+u
 
