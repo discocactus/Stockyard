@@ -40,6 +40,32 @@ def get_jpx_new_added_code(start_index=0, end_index=None, csv_path=csv_path):
     result = list(jpx_new_added['code'][start_index : end_index])
 
     return result
+
+
+def get_stooq_ticker():
+    result = []
+    p = 1
+    base = 'https://stooq.com/t/tr/?l={0}'
+
+    while True:
+    # while p < 4: # テスト用
+        url = base.format(p)
+        # 'https://stooq.com/t/tr/?o=4&l=1' # 2018-04-01 l=1195まで
+        print('{0}: {1}'.format(p, url))
+        tables = get_table(url)
+        if len(tables[25]) == 0:
+            break
+        result.append(tables[25])
+        p += 1
+        
+    result = pd.concat(result, ignore_index=True)
+    result = result[['Ticker', 'Market', 'Price change 1D']]
+    result.columns = ['ticker', 'name', 'market']
+    result['market'] = result['market'].fillna("")
+    result = result.sort_values(by=['market', 'name'])
+    result = result.drop_duplicates().reset_index(drop=True)
+    
+    return result
     
     
 def get_yahoo_code(start_index=0, end_index=None, csv_path=csv_path):

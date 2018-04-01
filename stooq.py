@@ -10,12 +10,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import wget
 import pathlib
+import importlib
 from retry import retry
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
 
+import stock
+
 get_ipython().run_line_magic('matplotlib', 'inline')
+
+
+# In[ ]:
+
+
+importlib.reload(stock)
 
 
 # In[ ]:
@@ -29,6 +38,11 @@ pd.set_option('display.max_columns', 30)
 
 
 stooq_path = pathlib.Path('D:\stockyard\stooq')
+
+# 通常のアドレス
+'https://stooq.com/q/?s={0}'.format(ticker)
+# ダウンロードAPI
+'https://stooq.com/q/d/l/?s={0}&i=d'.format(ticker) # i=d 日足
 
 # 10年国債金利
 10auy.b
@@ -65,12 +79,35 @@ for file in stooq_path.iterdir():
     print(file)
 
 
+# # Ticker リスト
+https://stooq.com/t/tr/?m=1&o=3&l=2
+m: market
+o: ソートする列番号 (3:Ticker, 4:Market(Allの場合))
+l: ページ番号
+
+1:Currency, 2:Warsaw SE, 3:NewConnect, 4:Deutsche Borse, 5:NYSE MKT,
+6:NASDAQ, 7:NYSE, 8:Tokyo SE, 9:Bonds, 10:Commodities Futures,
+11:London SE, 15:Commodities Cash, ちょっとめんどくさくなってきた
+
+https://stooq.com/t/tr/?o=4&l=1 # all, market順
+# In[ ]:
+
+
+stock.get_stooq_ticker()
+
+
+# In[ ]:
+
+
+pd.read_csv("D:\stockyard\_csv\stooq_ticker.csv")
+
+
 # # データのダウンロード
 
 # In[ ]:
 
 
-ticker = 'usdjpy'
+ticker = 'usdjpy' # https://stooq.com/q/?s=usdjpy
 
 
 # In[ ]:
@@ -317,19 +354,4 @@ plt.plot(x, (y10.oil[plot_start:] / y10.oil[plot_start]), color='brown', label='
 plt.plot(x, (y10.gold[plot_start:] / y10.gold[plot_start]), color='orange', label='gold')
 plt.legend(loc='upper left')
 plt.show()
-
-
-# # selenium
-
-# In[ ]:
-
-
-# ChromeのWebDriverオブジェクトを作成する
-driver = webdriver.Chrome()
-
-
-# In[ ]:
-
-
-u
 
