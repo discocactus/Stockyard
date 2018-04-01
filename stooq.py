@@ -99,7 +99,31 @@ stock.get_stooq_ticker()
 # In[ ]:
 
 
-pd.read_csv("D:\stockyard\_csv\stooq_ticker.csv")
+tickers = pd.read_csv("D:\stockyard\_csv\stooq_ticker.csv", index_col=0)#.fillna('none')
+
+
+# In[ ]:
+
+
+tickers.to_csv("D:\stockyard\_csv\stooq_ticker.csv")
+
+
+# In[ ]:
+
+
+tickers[tickers['name'] == 'none']
+
+
+# In[ ]:
+
+
+len(tickers)
+
+
+# In[ ]:
+
+
+tickers.groupby('market').count()
 
 
 # # データのダウンロード

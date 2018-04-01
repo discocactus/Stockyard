@@ -61,7 +61,8 @@ def get_stooq_ticker():
     result = pd.concat(result, ignore_index=True)
     result = result[['Ticker', 'Market', 'Price change 1D']]
     result.columns = ['ticker', 'name', 'market']
-    result['market'] = result['market'].fillna("")
+    # result['market'] = result['market'].fillna("")
+    result = result.fillna('none')
     result = result.sort_values(by=['market', 'name'])
     result = result.drop_duplicates().reset_index(drop=True)
     
