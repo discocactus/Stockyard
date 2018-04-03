@@ -119,7 +119,7 @@ for idx in range(len(aud_tables)):
 # In[ ]:
 
 
-# 2018-04-01 last ver.
+# 2018-04-01 last ver. から修正を追加
 # TODO エラーで止まった場合に chrome を終了して終わるように
 %%writefile investing_com_script.py
 
@@ -183,8 +183,8 @@ for num in range(1311, 1801):
     page_url = driver.current_url
     print(page_url)
     # ページにテーブルが無ければスキップする
-    # if 'No results found' not in driver.page_source:
-    if not page_url.startswith('https://www.investing.com/economic-calendar/-'):
+    # TODO この書き方で大丈夫か動作確認 2018-04-03
+    if not page_url.startswith('https://www.investing.com/economic-calendar/-') and 'No results found' not in driver.page_source:
         page_title = driver.title
         if page_title == "":
             driver.refresh()
@@ -242,7 +242,7 @@ for num in range(1311, 1801):
 
         # テーブルを取得、保存
         df = pd.read_html(driver.page_source, header=0)[0]
-        df.to_csv('{0}/{1}_{2}.csv'.format(csv_path, page_num.zfill(4), re.sub('[ /.]', '_', page_title)),
+        df.to_csv('{0}/{1}_{2}.csv'.format(csv_path, page_num.zfill(4), re.sub("[ /.']", '_', page_title)),
                  index=False)
         print('length: {0}'.format(len(df)))
         
@@ -403,8 +403,8 @@ for num in failed: # 失敗分再読み込み用
     page_url = driver.current_url
     print(page_url)
     # ページにテーブルが無ければスキップする
-    # if 'No results found' not in driver.page_source:
-    if not page_url.startswith('https://www.investing.com/economic-calendar/-'):
+    # TODO この書き方で大丈夫か動作確認が必要 2018-04-03
+    if not page_url.startswith('https://www.investing.com/economic-calendar/-') and 'No results found' not in driver.page_source:
         page_title = driver.title
         if page_title == "":
             driver.refresh()
@@ -462,7 +462,7 @@ for num in failed: # 失敗分再読み込み用
 
         # テーブルを取得、保存
         df = pd.read_html(driver.page_source, header=0)[0]
-        df.to_csv('{0}/{1}_{2}.csv'.format(csv_path, page_num.zfill(4), re.sub('[ /.]', '_', page_title)),
+        df.to_csv('{0}/{1}_{2}.csv'.format(csv_path, page_num.zfill(4), re.sub("[ /.']", '_', page_title)),
                  index=False)
         print('length: {0}'.format(len(df)))
         
@@ -570,4 +570,170 @@ driver.refresh()
 
 
 driver.quit()
+
+
+# # リストの結合
+
+# In[ ]:
+
+
+list_file = "D:\stockyard\_csv\investing_page_list.csv"
+
+
+# In[ ]:
+
+
+# リストファイルの準備
+if os.path.exists(list_file):
+    page_list = pd.read_csv(list_file, index_col=0)
+else:
+    page_list = pd.DataFrame()
+
+
+# In[ ]:
+
+
+page_list
+
+
+# In[ ]:
+
+
+gce_list = pd.read_csv("D:\stockyard\_csv\investing_page_list_gce.csv", index_col=0)
+
+
+# In[ ]:
+
+
+gce_list
+
+
+# In[ ]:
+
+
+page_list = page_list.append(gce_list)
+
+
+# In[ ]:
+
+
+page_list = page_list.drop_duplicates()
+
+
+# In[ ]:
+
+
+page_list = page_list[~page_list.isnull().any(axis=1)]
+
+
+# In[ ]:
+
+
+page_list = page_list.sort_index()
+
+
+# In[ ]:
+
+
+page_list.to_csv(list_file)
+
+
+# # 各ファイルの内容の確認とリストへの情報追記
+
+# In[ ]:
+
+
+csv_path = "D:\stockyard\investing"
+
+
+# In[ ]:
+
+
+list_file = "D:\stockyard\_csv\investing_page_list.csv"
+
+
+# In[ ]:
+
+
+page_list = pd.read_csv(list_file, index_col=0)
+
+
+# In[ ]:
+
+
+page_list
+
+
+# In[ ]:
+
+
+failed_list = pd.DataFrame(columns=['idx', 'err', 'file_name'])
+for idx, row in page_list.iterrows():
+    try:
+        file_name = '{0}\{1}_{2}.csv'.format(csv_path, str(idx).zfill(4), re.sub("[ /.']", '_', row[0]))
+        df = pd.read_csv(file_name)
+        page_list.loc[idx, 'first'] = df['Release Date'][-1:].values[0]
+        page_list.loc[idx, 'last'] = df['Release Date'][0]
+        page_list.loc[idx, 'rows'] = len(df)
+        page_list.loc[idx, 'col_name'] = ', '.join(list(df.columns.values))
+        page_list.loc[idx, 'cols'] = len(df.columns)
+    except Exception as e:
+        print('{0}: {1}'.format(idx, e))
+        failed_list = failed_list.append(pd.DataFrame([[idx, e, file_name]], columns=['idx', 'err', 'file_name'])
+                                        ).reset_index(drop=True)
+
+
+# In[ ]:
+
+
+# TODO 実質的な中身の無いファイルの削除
+failed_list
+
+
+# In[ ]:
+
+
+page_list = page_list.drop(list(failed_list['idx']))
+
+
+# In[ ]:
+
+
+page_list.to_csv("D:\stockyard\_csv\investing_page_list_parsed.csv")
+
+
+# In[ ]:
+
+
+failed_list.to_csv("D:\stockyard\_csv\investing_page_list_failed.csv", index=False)
+
+
+# In[ ]:
+
+
+idx
+
+
+# In[ ]:
+
+
+df = pd.read_csv('D:/stockyard/investing/1707_French_Presidential_Election_–_1st_Round.csv')
+
+
+# In[ ]:
+
+
+df = pd.read_csv('{0}/{1}_{2}.csv'.format(csv_path, str(idx).zfill(4), re.sub("[ /.']", '_', row[0])))
+
+
+# In[ ]:
+
+
+print('{0}/{1}_{2}.csv'.format(csv_path, str(idx).zfill(4), re.sub("[ /.']", '_', row[0])))
+
+
+# In[ ]:
+
+
+df
 
