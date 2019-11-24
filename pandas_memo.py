@@ -647,6 +647,14 @@ df.columns.isin(['N1', 'N2', 'N4'])
 df.ix[:, df.columns.isin(['N1', 'N2', 'N4'])]
 
 
+# not isin '~' で否定 
+
+# In[ ]:
+
+
+df[~df['date'].isin(a)]
+
+
 # ### pd.Index.sort_values - ラベルをソートして選択したい
 
 # __補足)__ インデックスのソートは .sort_index
