@@ -1,0 +1,49 @@
+前日終値
+response.css('#detail *::text').extract()[3]
+response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+値幅制限
+response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(7) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+時価総額
+response.css('.PQ9Z_PS3 > li:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+配当利回り
+.PQ9Z_PS3 > li:nth-child(3) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1)
+
+
+年初来高値・安値に更新マークがつくとcssセレクターが変わってしまう・・・
+年初来高値更新なし
+.PQ9Z_PS3 > li:nth-child(11) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1)
+年初来高値更新あり
+span._1fofaCjs:nth-child(2) > span:nth-child(1) > span:nth-child(1)
+
+年初来安値
+response.css('.PQ9Z_PS3 > li:nth-child(12) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+信用買残
+response.css('li.diLxNiWT:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+信用売残前週比
+response.css('li.diLxNiWT:nth-child(5) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0]
+
+
+ssh -i ~/.ssh/google_compute_engine hideshi_honma@35.237.162.166
+gcloud compute scp --zone (ゾーン名) --project=(プロジェクト名) (ローカルのファイルパス) (ユーザー名)@(インスタンス名):(サーバーのディレクトリパス)
+gcloud compute scp --zone us-east1-b --project=gcp1-195509 (ローカルのファイルパス) hideshi_honma@instance-2:(サーバーのディレクトリパス)
+
+gcloud compute scp コピー元ローカルパス instance-2:コピー先インスタンスパス --zone us-east1-b
+
+Table1
+response.css("._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2)").xpath('string()').extract()
+response.css("#detail").xpath('string()').extract()
+
+
+Table2
+response.css(".PQ9Z_PS3").xpath('string()').extract()
+response.css("#referenc").xpath('string()').extract()
+
+
+Table3
+response.css("._3BSKtx-a").xpath('string()').extract()[0]
+response.css("#margin").xpath('string()').extract()[0]

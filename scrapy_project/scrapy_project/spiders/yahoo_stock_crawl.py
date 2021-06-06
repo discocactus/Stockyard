@@ -21,8 +21,8 @@ class yahoo_stock_crawl_spider(CrawlSpider):
     # https://stocks.finance.yahoo.co.jp/stocks/detail/?code=1301
     rules = (
         # 試験的に一覧の9ページ目(または指定ページ)まで。末尾の \d$ (or [1-2]$) を \d+$ に変えれば10ページ以降も辿れるはず
-        Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=[1-2]$')),
-        # Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=\d+$')),
+        # Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=[1-2]$')),
+        Rule(LinkExtractor(allow=r'/stocks/qi/\?&p=\d+$')),
         Rule(LinkExtractor(allow=r'/stocks/detail/\?code=\d+$'), callback='parse_fundamental'),
     )
 
@@ -34,45 +34,49 @@ class yahoo_stock_crawl_spider(CrawlSpider):
         item = yahoo_fundamental()  # yahoo_fundamental オブジェクトを作成
 
         # item['date'] = response.css('#stockinf span').xpath('string()').extract()[0] # date
-        item['date'] = response.css(
-            '.innerDate > div:nth-child(7) > dl:nth-child(1) > dd:nth-child(1) > span:nth-child(2)'
-            ).xpath('string()').extract_first() # date
-        item['code'] = response.css('.stocksInfo > dt:nth-child(1)').xpath('string()').extract_first() # 銘柄コード
-        item['name'] = response.css('.symbol > h1:nth-child(1)').xpath('string()').extract_first() # 銘柄名
+        item['date'] = response.css('._37FKL945 *::text').extract()[1] # date
+        item['code'] = response.css('#industry *::text').extract()[0] # 銘柄コード
+        item['name'] = response.css('.DL5lxuTC *::text').extract()[0] # 銘柄名
 
-        item['p_close'] = response.css('#detail strong').xpath('string()').extract()[2] # 前日終値
-        item['open'] = response.css('#detail strong').xpath('string()').extract()[3] # 始値
-        item['high'] = response.css('#detail strong').xpath('string()').extract()[4] # 高値
-        item['low'] = response.css('#detail strong').xpath('string()').extract()[5] # 安値
-        item['close'] = response.css('td.stoksPrice:nth-child(3)').xpath('string()').extract_first() # 終値
-        item['volume'] = response.css('#detail strong').xpath('string()').extract()[6] # 出来高
-        item['売買代金'] = response.css('#detail strong').xpath('string()').extract()[7] # 売買代金
-        item['値幅制限'] = response.css('#detail strong').xpath('string()').extract()[8] # 値幅制限
+        item['detail'] = response.css("._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2)").xpath('string()').extract()[0]
+        #item['p_close'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 前日終値
+        #item['open'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(2) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 始値
+        #item['high'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(3) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 高値
+        #item['low'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(4) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 安値
+        #item['close'] = response.css('.nOmR5zWz *::text').extract()[0] # 終値
+        #item['volume'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(5) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 出来高
+        #item['売買代金'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(6) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 売買代金
+        #item['値幅制限'] = response.css('._2Yx3YP9V > div:nth-child(1) > ul:nth-child(2) > li:nth-child(7) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 値幅制限
 
-        item['時価総額_百万円'] = response.css('#rfindex strong').xpath('string()').extract()[0] # 時価総額(百万円)
-        item['発行済株式数'] = response.css('#rfindex strong').xpath('string()').extract()[1] # 発行済株式数
-        item['配当利回り'] = response.css('#rfindex strong').xpath('string()').extract()[2] # 配当利回り
-        item['配当'] = response.css('#rfindex strong').xpath('string()').extract()[3] # 1株配当
-        item['per'] = response.css('#rfindex strong').xpath('string()').extract()[4] # PER
-        item['pbr'] = response.css('#rfindex strong').xpath('string()').extract()[5] # PBR
-        item['eps'] = response.css('#rfindex strong').xpath('string()').extract()[6] # EPS
-        item['bps'] = response.css('#rfindex strong').xpath('string()').extract()[7] # BPS
-        item['最低購入代金'] = response.css('#rfindex strong').xpath('string()').extract()[8] # 最低購入代金
-        item['単元株数'] = response.css('#rfindex strong').xpath('string()').extract()[9] # 単元株数
-        item['年初来高値'] = response.css('#rfindex strong').xpath('string()').extract()[10] # 年初来高値
-        item['年初来安値'] = response.css('#rfindex strong').xpath('string()').extract()[11] # 年初来安値
+        item['reference'] = response.css(".PQ9Z_PS3").xpath('string()').extract()[0]
+        #item['時価総額_百万円'] = response.css('.PQ9Z_PS3 > li:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 時価総額(百万円)
+        #item['発行済株式数'] = response.css('.PQ9Z_PS3 > li:nth-child(2) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 発行済株式数
+        #item['配当利回り'] = response.css('.PQ9Z_PS3 > li:nth-child(3) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 配当利回り
+        #item['配当'] = response.css('.PQ9Z_PS3 > li:nth-child(4) > dl:nth-child(1) > dd:nth-child(2) *::text').extract()[0] # 1株配当
+        #item['per'] = response.css('.PQ9Z_PS3 > li:nth-child(5) > dl:nth-child(1) > dd:nth-child(2) *::text').extract()[1] # PER
+        #item['pbr'] = response.css('.PQ9Z_PS3 > li:nth-child(6) > dl:nth-child(1) > dd:nth-child(2) *::text').extract()[1] # PBR
+        #item['eps'] = response.css('.PQ9Z_PS3 > li:nth-child(7) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(2) *::text').extract()[0] # EPS
+        #item['bps'] = response.css('.PQ9Z_PS3 > li:nth-child(8) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(2) *::text').extract()[0] # BPS
+        #item['最低購入代金'] = response.css('.PQ9Z_PS3 > li:nth-child(9) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 最低購入代金
+        #item['単元株数'] = response.css('.PQ9Z_PS3 > li:nth-child(10) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 単元株数
+        #item['年初来高値'] = response.css('.PQ9Z_PS3 > li:nth-child(11) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 年初来高値
+        #item['年初来安値'] = response.css('.PQ9Z_PS3 > li:nth-child(12) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 年初来安値
 
-        item['信用買残'] = response.css('#margin strong').xpath('string()').extract()[0] # 信用買残
-        item['信用買残前週比'] = response.css('#margin strong').xpath('string()').extract()[1] # 信用買残前週比
-        item['信用売残'] = response.css('#margin strong').xpath('string()').extract()[3] # 信用売残
-        item['信用売残前週比'] = response.css('#margin strong').xpath('string()').extract()[4] # 信用売残前週比
-        item['貸借倍率'] = response.css('#margin strong').xpath('string()').extract()[2] # 貸借倍率
+        item['margin'] = response.css("._3BSKtx-a").xpath('string()').extract()[0]
+        #item['信用買残'] = response.css('li.diLxNiWT:nth-child(1) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 信用買残
+        #item['信用買残前週比'] = response.css('li.diLxNiWT:nth-child(2) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 信用買残前週比
+        #item['信用売残'] = response.css('li.diLxNiWT:nth-child(3) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 信用売残
+        #item['信用売残前週比'] = response.css('li.diLxNiWT:nth-child(4) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 信用売残前週比
+        #item['貸借倍率'] = response.css('li.diLxNiWT:nth-child(5) > dl:nth-child(1) > dd:nth-child(2) > span:nth-child(1) > span:nth-child(1) > span:nth-child(1) *::text').extract()[0] # 貸借倍率
 
         item['get'] = datetime.now().strftime("%Y/%m/%d %H:%M:%S") # 取得日時
 
-        item['date'] = re.sub('[（）]', '', item['date'])
-        for key in item:
-            item[key] = re.sub('\n', '', item[key])
+        #item['date'] = re.sub('[（）]', '', item['date'])
+        item['detail'] = re.sub('用語', '', item['detail'])
+        item['reference'] = re.sub('用語', '', item['reference'])
+        item['margin'] = re.sub('用語', '', item['margin'])
+        #for key in item:
+        #    item[key] = re.sub('\n', '', item[key])
 
         print('\n - print item - \n')
         for key in item:

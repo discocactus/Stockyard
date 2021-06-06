@@ -201,3 +201,38 @@ class YahooStockSpider(scrapy.Spider):
 
 get_ipython().run_cell_magic('writefile', 'yahoo_stock_crawl.py', '\n# -*- coding: utf-8 -*-\n# エンコーディング宣言は Python2 用なので削除してもよい\n\nfrom scrapy.spiders import CrawlSpider, Rule\nfrom scrapy.linkextractors import LinkExtractor\n\nfrom scrapy_project.items import yahoo_fundamental\n\n\nclass yahoo_stock_crawl_spider(CrawlSpider):\n    name = \'yahoo_stock_crawl\'\n    allowed_domains = [\'stocks.finance.yahoo.co.jp\']\n    start_urls = (\n        \'http://stocks.finance.yahoo.co.jp/stocks/qi/\',\n    )\n\n    # リンクをたどるためのルールのリスト\n    # https://stocks.finance.yahoo.co.jp/stocks/detail/?code=1301\n    rules = (\n        # 試験的に一覧の9ページ目まで。末尾の \\d$ を \\d+$ に変えれば10ページ以降も辿れるはず\n        Rule(LinkExtractor(allow=r\'/stocks/qi/\\?&p=\\d$\')),\n        Rule(LinkExtractor(allow=r\'/stocks/detail/\\?code=\\d+$\'), callback=\'parse_fundamental\'),\n    )\n\n    \n    def parse_fundamental(self, response):\n        """\n        個々の銘柄ページでの処理\n        """\n        item = yahoo_fundamental()  # yahoo_fundamental オブジェクトを作成\n        item[\'code\'] = response.css(\'#stockinf dt\').xpath(\'string()\').extract_first() # 銘柄コード\n        item[\'symbol_name\'] = response.css(\'.symbol\').xpath(\'string()\').extract_first() # 銘柄名\n        item[\'per\'] = response.css(\'#rfindex strong\').xpath(\'string()\').extract()[4] # PER\n        item[\'pbr\'] = response.css(\'#rfindex strong\').xpath(\'string()\').extract()[5] # PBR\n        item[\'eps\'] = response.css(\'#rfindex strong\').xpath(\'string()\').extract()[6] # EPS\n        item[\'bps\'] = response.css(\'#rfindex strong\').xpath(\'string()\').extract()[7] # BPS\n        yield item  # Itemをyieldして、データを抽出する')
 
+
+# # yahoo_fundamental_2019-12-02to16_failed_4to6 のエラー分の修正
+GCEのインスタンスのHDDが約1年半分の取得でいっぱいになってしまい、12/4~6までのデータが取れていなかった
+12/4の途中でエラーが発生し列数が崩れてしまいpandasで読み込めなくなってソートができていなかった
+Excelにて12/4のデータはすべて削除した
+# In[ ]:
+
+
+df = pd.read_csv('yahoo_fundamental_2019-12-02to16_failed_4to6_edited.csv', encoding='cp932')
+
+
+# In[ ]:
+
+
+df
+
+
+# In[ ]:
+
+
+df = df.sort_values(['date', 'code', 'get'])
+df = df.drop_duplicates(['date', 'code'], keep='last').reset_index(drop=True)
+
+
+# In[ ]:
+
+
+df
+
+
+# In[ ]:
+
+
+df.to_csv('yahoo_fundamental_2019-12-02to16_failed_4to6_edited_sorted.csv', index=False, encoding='utf-8')
+
